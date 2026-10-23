@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SoCal Shore Caster</title>
+<meta name="description" content="Live NOAA tides, wave forecast, what's biting and bait of the day for SoCal surf, pier and jetty fishing.">
+<meta name="theme-color" content="#0B7A75">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Shore Caster">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one-column phone app — sticky date bar, stacked panels, fixed bottom tab bar. Tide-table signage meets kelp water. */
+:root{
+  --bg:#EEF3F1; --surface:#FFFFFF; --ink:#0E2A2F; --muted:#587074; --line:#D3DEDB;
+  --accent:#0B7A75; --accent-ink:#FFFFFF; --flare:#E89B2E; --flare-soft:rgba(232,155,46,.18);
+  --night:rgba(14,42,47,.07); --water:rgba(11,122,117,.16);
+  --good:#2C8A55; --warn:#B87A12; --bad:#BC3F35;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A181B; --surface:#112428; --ink:#E2EDEB; --muted:#8EA5A7; --line:#21393D;
+  --accent:#3DB5AC; --accent-ink:#06201F; --flare:#F2B45A; --flare-soft:rgba(242,180,90,.18);
+  --night:rgba(0,0,0,.28); --water:rgba(61,181,172,.18);
+  --good:#56C084; --warn:#E0A63E; --bad:#E86A5F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A181B; --surface:#112428; --ink:#E2EDEB; --muted:#8EA5A7; --line:#21393D;
+  --accent:#3DB5AC; --accent-ink:#06201F; --flare:#F2B45A; --flare-soft:rgba(242,180,90,.18);
+  --night:rgba(0,0,0,.28); --water:rgba(61,181,172,.18);
+  --good:#56C084; --warn:#E0A63E; --bad:#E86A5F; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 calc(84px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+h2{font-size:1.45rem;font-weight:700;text-transform:uppercase}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:0}
+a{color:var(--accent)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--flare);outline-offset:2px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.eyebrow{font-family:var(--display);font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line);margin:0 auto;max-width:560px}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.brand h1{font-size:1.45rem;font-weight:700;text-transform:uppercase;line-height:1;white-space:nowrap}
+.brand select{max-width:100%;font-size:.85rem;padding:6px 8px}
+.brand h1 span{color:var(--accent)}
+.datebar{display:flex;align-items:center;gap:8px;margin-top:10px}
+.datebar button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:1.1rem}
+.datebar .d{flex:1;text-align:center;font-family:var(--display);font-size:1.25rem;font-weight:600;min-width:0}
+.datebar .d small{display:block;font-family:var(--body);font-size:.75rem;color:var(--muted);font-weight:500}
+select{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;max-width:100%}
+
+/* panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.view{display:flex;flex-direction:column;gap:14px;padding-top:14px}
+
+/* score */
+.score{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.dial{width:96px;height:96px;position:relative}
+.dial svg{width:96px;height:96px;display:block}
+.dial .v{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--display);font-size:2rem;font-weight:700;line-height:1}
+.dial .v small{font-size:.7rem;letter-spacing:.1em;color:var(--muted);font-family:var(--display)}
+.verdict{font-family:var(--display);font-size:1.6rem;font-weight:700;text-transform:uppercase;line-height:1.05}
+.factors{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--bg);white-space:nowrap}
+.chip.good{color:var(--good);border-color:currentColor}
+.chip.warn{color:var(--warn);border-color:currentColor}
+.chip.bad{color:var(--bad);border-color:currentColor}
+.chip.type{text-transform:uppercase;letter-spacing:.06em;font-size:.7rem}
+
+/* tide chart */
+.chart{width:100%;overflow:hidden}
+.chart svg{width:100%;height:auto;display:block}
+.events{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.ev{border:1px solid var(--line);border-radius:10px;padding:8px 2px;text-align:center;background:var(--bg);min-width:0}
+.ev .num{font-size:.85rem!important}
+.ev b{display:block;font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:.8rem;color:var(--muted)}
+.ev .num{font-size:1rem;font-weight:500}
+.note{font-size:.8rem;color:var(--muted);border-left:3px solid var(--flare);padding-left:10px}
+
+/* windows */
+.windows{display:flex;flex-direction:column;gap:6px}
+.win{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:start;padding:8px 0;border-top:1px solid var(--line)}
+.win:first-child{border-top:0}
+.win .t{font-family:var(--mono);font-size:.85rem;font-variant-numeric:tabular-nums}
+.win .w b{display:block}
+.win.hot .t{color:var(--flare);font-weight:500}
+.star{color:var(--flare)}
+
+/* sun moon */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv{display:flex;flex-direction:column;gap:2px;padding:10px;border-radius:10px;background:var(--bg);min-width:0}
+.kv .k{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kv .v{font-family:var(--mono);font-size:1rem}
+
+/* waves */
+.inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.inputs label{display:flex;flex-direction:column;gap:4px;font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;min-width:0}
+.inputs input{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);font-family:var(--mono);font-size:1.05rem}
+.power{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.power .big{font-family:var(--display);font-size:2.2rem;font-weight:700;line-height:1}
+.meter{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--good),var(--warn) 55%,var(--bad));position:relative}
+.meter i{position:absolute;top:-4px;width:4px;height:18px;border-radius:2px;background:var(--ink);transform:translateX(-2px)}
+.fishability{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fishability div{border-radius:10px;padding:8px;background:var(--bg);text-align:center;font-size:.8rem}
+.fishability b{display:block;font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:.85rem}
+.example{font-size:.75rem;font-weight:700;color:var(--warn);text-transform:uppercase;letter-spacing:.06em}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{font-size:.85rem;font-weight:600;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:var(--bg)}
+
+/* bait */
+.hero-bait{display:flex;flex-direction:column;gap:4px}
+.hero-bait .name{font-family:var(--display);font-size:1.9rem;font-weight:700;text-transform:uppercase;line-height:1.05;color:var(--accent)}
+.rank{display:flex;flex-direction:column}
+.rank .row{display:grid;grid-template-columns:28px 1fr;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.rank .row:first-child{border-top:0}
+.rank .n{font-family:var(--display);font-size:1.3rem;font-weight:700;color:var(--muted)}
+.rank .row b{display:block}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.seg button{flex:1;padding:10px 6px;border:0;background:transparent;cursor:pointer;font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:.95rem}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.rig{font-family:var(--mono);font-size:.82rem;background:var(--bg);border-radius:10px;padding:10px;white-space:pre-wrap}
+
+/* spots */
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.spot{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.spot-top{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+.spot-top h3{font-size:1.25rem}
+.badge{font-family:var(--display);font-weight:700;font-size:1.3rem;line-height:1;padding:6px 8px;border-radius:10px;text-align:center;min-width:52px;border:2px solid currentColor}
+.badge small{display:block;font-size:.6rem;letter-spacing:.1em}
+.badge.good{color:var(--good)} .badge.warn{color:var(--warn)} .badge.bad{color:var(--bad)}
+.rankno{font-family:var(--mono);color:var(--muted);font-size:.8rem}
+.spot details summary{cursor:pointer;font-weight:600;color:var(--accent);font-size:.9rem}
+.spot details[open] summary{margin-bottom:6px}
+
+/* species */
+.months{display:grid;grid-template-columns:repeat(12,1fr);gap:2px}
+.months span{height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-family:var(--mono);color:var(--ink)}
+.months span.cur{outline:2px solid var(--flare);outline-offset:1px}
+.l0{background:var(--bg)} .l1{background:color-mix(in srgb,var(--accent) 25%,var(--bg))}
+.l2{background:color-mix(in srgb,var(--accent) 55%,var(--bg))} .l3{background:var(--accent);color:var(--accent-ink)!important}
+.bitelist{display:flex;flex-direction:column}
+.bite{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 0;border-top:1px solid var(--line);align-items:center}
+.bite:first-child{border-top:0}
+.bars{display:flex;gap:2px}
+.bars i{width:8px;height:16px;border-radius:2px;background:var(--line)}
+.bars i.on{background:var(--accent)}
+
+/* tabbar */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs button{border:0;background:transparent;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--muted);font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:.82rem}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button[aria-current="page"]{color:var(--accent)}
+footer{font-size:.75rem;color:var(--muted);text-align:center;padding-block:4px 12px}
+@media (prefers-reduced-motion:no-preference){.view{animation:fade .25s ease}}
+@keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+.status{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.78rem;color:var(--muted);min-width:0}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.status.live .dot{background:var(--good)} .status.stale .dot{background:var(--warn)}
+.status span{flex:1;min-width:0}
+.status button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:.78rem;cursor:pointer}
+.forecast{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;align-items:end}
+.fday{border:0;background:var(--bg);border-radius:8px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;min-width:0}
+.fday[aria-pressed="true"]{outline:2px solid var(--accent)}
+.fday .col{width:60%;border-radius:3px 3px 0 0;min-height:4px}
+.fday .lbl{font-size:.68rem;font-weight:600;text-transform:uppercase;color:var(--muted)}
+.fday .val{font-family:var(--mono);font-size:.72rem}
+.src{font-size:.72rem;color:var(--muted)}
+.reset{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:4px 10px;font-size:.78rem;cursor:pointer}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1>SoCal <span>Shore</span> Caster</h1>
+    <select id="region" aria-label="Region">
+      <option value="all">All SoCal</option>
+      <option value="sb">Santa Barbara / Ventura</option>
+      <option value="la">Los Angeles</option>
+      <option value="oc">Orange County</option>
+      <option value="sd">San Diego</option>
+    </select>
+  </div>
+  <div class="datebar">
+    <button id="prev" aria-label="Previous day">‹</button>
+    <div class="d" id="dateLabel">Today</div>
+    <button id="next" aria-label="Next day">›</button>
+  </div>
+  <div class="status" id="status"><i class="dot"></i><span>Loading live NOAA tides and wave forecast…</span><button id="refresh">Refresh</button></div>
+</header>
+
+<main class="wrap">
+  <section class="view" id="v-today"></section>
+  <section class="view" id="v-spots" hidden></section>
+  <section class="view" id="v-bait" hidden></section>
+  <section class="view" id="v-fish" hidden></section>
+  <footer>Tides and water temperature from NOAA CO-OPS. Wave forecast from Open-Meteo. With no signal, the app falls back to the last saved data or to tide estimates calculated on your phone. Always check posted surf warnings before heading out.</footer>
+</main>
+
+<nav class="tabs" aria-label="Sections"><div class="in">
+  <button data-tab="today" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 20c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><circle cx="12" cy="6" r="3"/></svg>Today</button>
+  <button data-tab="spots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Spots</button>
+  <button data-tab="bait"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v9a5 5 0 1 1-5 5"/><path d="M7 16l-2-2"/></svg>Bait</button>
+  <button data-tab="fish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3-5 8-6 12-4l6-3-1 7 1 7-6-3c-4 2-9 1-12-4z"/><circle cx="7" cy="11" r="1" fill="currentColor"/></svg>Fish</button>
+</div></nav>
+
+<script>
+"use strict";
+/* ================= ASTRONOMY (after Meeus / suncalc) ================= */
+const rad=Math.PI/180, dayMs=864e5, J1970=2440588, J2000=2451545, OBL=rad*23.4397;
+const toDays=d=>d.valueOf()/dayMs-0.5+J1970-J2000;
+const RA=(l,b)=>Math.atan2(Math.sin(l)*Math.cos(OBL)-Math.tan(b)*Math.sin(OBL),Math.cos(l));
+const DEC=(l,b)=>Math.asin(Math.sin(b)*Math.cos(OBL)+Math.cos(b)*Math.sin(OBL)*Math.sin(l));
+const sidereal=(d,lw)=>rad*(280.16+360.9856235*d)-lw;
+const altitude=(H,phi,dec)=>Math.asin(Math.sin(phi)*Math.sin(dec)+Math.cos(phi)*Math.cos(dec)*Math.cos(H));
+function sunCoords(d){const M=rad*(357.5291+0.98560028*d);
+  const C=rad*(1.9148*Math.sin(M)+0.02*Math.sin(2*M)+0.0003*Math.sin(3*M));
+  const L=M+C+rad*102.9372+Math.PI;return{dec:DEC(L,0),ra:RA(L,0)}}
+function moonCoords(d){const L=rad*(218.316+13.176396*d),M=rad*(134.963+13.064993*d),F=rad*(93.272+13.229350*d);
+  const l=L+rad*6.289*Math.sin(M),b=rad*5.128*Math.sin(F);return{ra:RA(l,b),dec:DEC(l,b),dist:385001-20905*Math.cos(M)}}
+function moonIllum(date){const d=toDays(date),s=sunCoords(d),m=moonCoords(d),sd=149598000;
+  const phi=Math.acos(Math.sin(s.dec)*Math.sin(m.dec)+Math.cos(s.dec)*Math.cos(m.dec)*Math.cos(s.ra-m.ra));
+  const inc=Math.atan2(sd*Math.sin(phi),m.dist-sd*Math.cos(phi));
+  const ang=Math.atan2(Math.cos(s.dec)*Math.sin(s.ra-m.ra),Math.sin(s.dec)*Math.cos(m.dec)-Math.cos(s.dec)*Math.sin(m.dec)*Math.cos(s.ra-m.ra));
+  return{fraction:(1+Math.cos(inc))/2,phase:0.5+0.5*inc*(ang<0?-1:1)/Math.PI}}
+const wrap=a=>{a=(a+Math.PI)%(2*Math.PI);if(a<0)a+=2*Math.PI;return a-Math.PI};
+function crossings(t0,t1,fn,stepMin){const out=[],st=stepMin*6e4;let pt=t0,pv=fn(t0);
+  for(let t=t0+st;t<=t1;t+=st){const v=fn(t);
+    if(pv<0&&v>=0&&Math.abs(v-pv)<1)out.push({t:pt+(t-pt)*(-pv)/(v-pv),dir:1});
+    else if(pv>=0&&v<0&&Math.abs(v-pv)<1)out.push({t:pt+(t-pt)*pv/(pv-v),dir:-1});
+    pt=t;pv=v}return out}
+function astro(dayStart,lat,lng){
+  const phi=rad*lat,lw=rad*-lng,dayEnd=dayStart+dayMs;
+  const sunAlt=t=>{const d=toDays(t),c=sunCoords(d);return altitude(sidereal(d,lw)-c.ra,phi,c.dec)-rad*-0.833};
+  const moonAlt=t=>{const d=toDays(t),c=moonCoords(d);return altitude(sidereal(d,lw)-c.ra,phi,c.dec)-rad*0.133};
+  const s=crossings(dayStart,dayEnd,sunAlt,5);
+  const m=crossings(dayStart,dayEnd,moonAlt,5);
+  const span0=dayStart-2*dayMs,span1=dayEnd+2*dayMs;
+  const Hup=t=>{const d=toDays(t);return wrap(sidereal(d,lw)-moonCoords(d).ra)};
+  const Hlo=t=>wrap(Hup(t)-Math.PI);
+  const up=crossings(span0,span1,Hup,10).filter(x=>x.dir===1).map(x=>({t:x.t,kind:"upper"}));
+  const lo=crossings(span0,span1,Hlo,10).filter(x=>x.dir===1).map(x=>({t:x.t,kind:"lower"}));
+  return{sunrise:s.find(x=>x.dir===1)?.t,sunset:s.find(x=>x.dir===-1)?.t,
+    moonrise:m.find(x=>x.dir===1)?.t,moonset:m.find(x=>x.dir===-1)?.t,
+    transits:[...up,...lo].sort((a,b)=>a.t-b.t)}}
+
+/* ================= TIDE ESTIMATE =================
+   SoCal tides are mixed semidiurnal. High water follows the moon's upper and lower
+   transits by the lunitidal interval (~9.3 h along this coast); lows fall between highs.
+   Range swells near new/full moon (spring) and shrinks near quarter moons (neap). */
+const HWI=9.3*3600e3;
+function springFactor(t){const p=moonIllum(new Date(t-1.5*dayMs)).phase;return Math.abs(Math.cos(2*Math.PI*p))}
+function tideEvents(transits){
+  const highs=transits.map(x=>x.t+HWI),ev=[];
+  for(let i=0;i<highs.length;i++){
+    const a=0.45+0.55*springFactor(highs[i]);
+    ev.push({t:highs[i],type:"High",v:a});
+    if(i<highs.length-1){const tl=(highs[i]+highs[i+1])/2;ev.push({t:tl,type:"Low",v:-(0.45+0.55*springFactor(tl))})}}
+  return ev}
+function tideAt(ev,t){for(let i=0;i<ev.length-1;i++){const a=ev[i],b=ev[i+1];
+  if(t>=a.t&&t<=b.t){const f=(t-a.t)/(b.t-a.t);return a.v+(b.v-a.v)*(1-Math.cos(Math.PI*f))/2}}return 0}
+
+/* ================= DATA ================= */
+/* tide = NOAA prediction station, temp = NOAA station with a water thermometer (or null),
+   sea = Open-Meteo marine grid point just offshore */
+const REGIONS={
+  sb:{name:"Santa Barbara / Ventura",lat:34.27,lng:-119.29,tide:{id:"9411340",name:"Santa Barbara"},temp:null,sea:[34.20,-119.30],buoys:[["46053","East Santa Barbara"],["46217","Anacapa Passage"]]},
+  la:{name:"Los Angeles",lat:33.9,lng:-118.42,tide:{id:"9410840",name:"Santa Monica"},temp:{id:"9410840",name:"Santa Monica"},sea:[33.95,-118.50],buoys:[["46221","Santa Monica Bay"],["46222","San Pedro"]]},
+  oc:{name:"Orange County",lat:33.6,lng:-117.93,tide:{id:"9410580",name:"Newport Beach"},temp:null,sea:[33.58,-117.95],buoys:[["46253","San Pedro South"],["46222","San Pedro"]]},
+  sd:{name:"San Diego",lat:32.9,lng:-117.25,tide:{id:"9410230",name:"La Jolla"},temp:{id:"9410230",name:"La Jolla"},sea:[32.90,-117.28],buoys:[["46225","Torrey Pines Outer"],["46224","Oceanside Offshore"]]},
+  all:{name:"All SoCal",lat:33.75,lng:-118.2,tide:{id:"9410660",name:"Los Angeles"},temp:{id:"9410840",name:"Santa Monica"},sea:[33.70,-118.30],buoys:[["46222","San Pedro"],["46225","Torrey Pines Outer"],["46053","East Santa Barbara"]]}
+};
+
+/* m = monthly bite strength Jan..Dec (0 none, 1 some, 2 good, 3 peak) */
+const SPECIES=[
+ {id:"perch",name:"Barred Surfperch",types:["surf","pier"],m:[3,3,3,3,2,1,1,1,1,2,3,3],cold:true,
+  baits:["Sand crabs","Gulp! Camo Sandworm","Ghost shrimp","Mussel"],lures:["Gulp! sandworm on a Carolina rig","1–2\" curly-tail grub (motor oil)"],
+  rig:"Carolina rig: 1/4–1/2 oz egg sinker → bead → swivel\n18–24\" 6 lb fluoro leader → #4–#6 baitholder hook",
+  where:"Troughs and rip edges 10–40 yds out. Look for darker, deeper water between sandbars.",limit:"20 surfperch combined, no more than 10 of one species."},
+ {id:"corbina",name:"California Corbina",types:["surf"],m:[0,0,1,1,2,3,3,3,3,2,1,0],warm:true,calm:true,
+  baits:["Sand crabs","Ghost shrimp","Bloodworms"],lures:["Gulp! sandworm drifted in the wash"],
+  rig:"Light Carolina rig or a single split-shot\n6–8 lb fluoro → #4–#6 hook, soft-shell crab",
+  where:"Right in the wash — often in ankle-deep water. Fish moving tide at dawn; they spook easily.",limit:"No size limit; general bag applies. Release big ones."},
+ {id:"yfc",name:"Yellowfin Croaker",types:["surf","pier"],m:[0,0,0,1,2,3,3,3,3,2,1,0],warm:true,
+  baits:["Sand crabs","Bloodworms","Ghost shrimp","Mussel"],lures:["Gulp! Camo Sandworm"],
+  rig:"Carolina rig or high/low rig\n1/2 oz sinker, #4 hooks",where:"Sandy surf and pier bases in summer, best at dusk and into dark.",limit:"General bag; check CDFW."},
+ {id:"spotfin",name:"Spotfin Croaker",types:["surf","pier","jetty"],m:[0,0,0,1,2,3,3,3,2,1,0,0],warm:true,night:true,
+  baits:["Ghost shrimp","Bloodworms","Clam","Mussel"],lures:[],
+  rig:"Fish-finder rig, 1 oz sliding sinker\n#2–#4 hook, 12 lb leader",where:"Harbor mouths, bays and deeper holes; prime at night on incoming tides.",limit:"General bag; check CDFW."},
+ {id:"halibut",name:"California Halibut",types:["surf","pier","jetty"],m:[1,1,2,3,3,3,3,3,2,2,1,1],
+  baits:["Live smelt or anchovy","Live sardine","Squid strips"],lures:["3–5\" paddle-tail swimbait on 1/2 oz jighead","Krocodile / Kastmaster spoon","Lucky Craft Flash Minnow"],
+  rig:"Live bait: fish-finder rig, 1 oz sinker, 3 ft 15 lb leader, #2–1/0 hook\nLures: cast, let hit bottom, slow-roll back",
+  where:"Sandy bottom near structure — pier ends, harbor mouths, rip channels. Smelt schools bring them in.",limit:"22\" minimum, 5 per day south of Pt. Sur."},
+ {id:"bass",name:"Calico & Sand Bass",types:["jetty","pier"],m:[0,0,1,2,3,3,3,3,3,2,1,0],warm:true,
+  baits:["Live smelt or anchovy","Squid strips","Ghost shrimp"],lures:["3–4\" plastic swimbait","Curly-tail grub","Krocodile / Kastmaster spoon"],
+  rig:"1/4–1/2 oz leadhead + 4\" swimbait on 12–15 lb\nWork it along the rocks, keep it moving",
+  where:"Rock rubble, kelp and pilings. Cast along the jetty face, not straight out.",limit:"14\" minimum, 5 combined bass."},
+ {id:"mack",name:"Pacific Mackerel",types:["pier","jetty"],m:[1,1,1,2,2,3,3,3,3,3,2,1],warm:true,
+  baits:["Squid strips","Mackerel strips","Live smelt or anchovy"],lures:["Sabiki rig","Krocodile / Kastmaster spoon"],
+  rig:"Sabiki with 1–2 oz sinker on bottom\nJig up and down mid-water",where:"Deeper water off pier ends. Schools move fast — when one bites, hurry.",limit:"No bag limit. Great live bait for halibut."},
+ {id:"bonito",name:"Pacific Bonito",types:["pier","jetty"],m:[0,0,0,0,1,2,3,3,3,2,1,0],warm:true,
+  baits:["Live smelt or anchovy"],lures:["Krocodile / Kastmaster spoon","Bonito feather behind a bubble"],
+  rig:"Clear casting bubble, half-filled\n6 ft leader → white feather or small spoon, fast retrieve",
+  where:"Pier ends near deep water (Redondo, Newport, Oceanside). Watch for boils at first light.",limit:"10 per day, no more than 5 under 24\"."},
+ {id:"jacksmelt",name:"Jacksmelt & Topsmelt",types:["pier","jetty"],m:[3,3,3,2,2,1,1,1,1,2,2,3],cold:true,
+  baits:["Squid strips","Mussel"],lures:["Sabiki rig"],rig:"Bobber rig: small float, 3 ft leader, two #8 hooks\nor a sabiki just below the surface",
+  where:"Top of the water column around pilings. Easy action for kids.",limit:"No bag limit."},
+ {id:"shark",name:"Leopard Shark & Rays",types:["surf","pier"],m:[0,0,1,2,3,3,3,3,2,1,0,0],warm:true,night:true,
+  baits:["Squid strips","Mackerel chunks","Ghost shrimp","Clam"],lures:[],
+  rig:"Fish-finder rig, 3–4 oz pyramid sinker\n30–40 lb leader → 2/0–4/0 circle hook",where:"Surf and bay flats after dark, best in summer on a rising tide.",limit:"Leopard shark 36\" minimum, 3 per day."},
+ {id:"opaleye",name:"Opaleye",types:["jetty"],m:[2,2,2,2,2,2,2,2,2,2,2,2],
+  baits:["Frozen peas","Mussel","Bread balls"],lures:[],rig:"Small slip bobber, 3 ft leader\nsplit-shot → #8 hook, 2–3 peas",
+  where:"White water along jetty rocks. Toss a few peas as chum.",limit:"10\" minimum, 5 per day."},
+ {id:"wsb",name:"White Seabass",types:["pier","jetty"],m:[0,0,2,3,3,2,1,1,1,1,0,0],night:true,
+  baits:["Live squid","Live sardine"],lures:["5–7\" swimbait at night"],rig:"Fly-line or light sliding sinker\n25–30 lb leader → 2/0–4/0 hook",
+  where:"Pier ends during spring squid runs, especially at night under lights.",limit:"28\" minimum, 3 per day (1 Mar 15–Jun 15 south of Pt. Conception)."},
+ {id:"pierperch",name:"Walleye & Pile Perch",types:["pier","jetty"],m:[3,3,3,2,2,1,1,1,1,2,3,3],cold:true,
+  baits:["Mussel","Gulp! Camo Sandworm","Ghost shrimp"],lures:["Sabiki rig"],rig:"Dropper loop, 1 oz sinker\n#6–#8 hooks, fish tight to the pilings",
+  where:"Under and around pier pilings, mid-depth to bottom.",limit:"Counts toward 20 surfperch combined."}
+];
+
+const BAIT_INFO={
+ "Sand crabs":"Dig them where waves recede — look for little V-shaped ripples. Soft-shells are gold. Hook up through the bottom, point out the top of the shell.",
+ "Gulp! Camo Sandworm":"Stays on the hook through rough surf. Cut to 1\" for perch and keep it in the Gulp juice.",
+ "Ghost shrimp":"Buy fresh or frozen at bait shops. Thread on the hook. Croaker and spotfin love it.",
+ "Mussel":"Buy at the bait shop or pick legally where allowed. Tie on with bait thread; soft and smelly, great for perch.",
+ "Bloodworms":"Pricey but deadly on croaker. Cut into 1–2\" pieces. Watch for the pincers.",
+ "Live smelt or anchovy":"Catch smelt with a sabiki off the pier or buy anchovies at the bait barge. Hook through the nose or collar.",
+ "Live sardine":"Bait barges in Newport, Dana Point, Oceanside and SD. Nose-hook and let them swim.",
+ "Live squid":"Only during squid runs (spring, under pier lights). Hook at the tip of the mantle.",
+ "Squid strips":"Cut 1/2\" × 3\" strips and hook once at the end so it flutters. Cheap and works on almost everything.",
+ "Mackerel strips":"Fresh-cut from a mackerel you caught. Oily and bloody, it brings fish in.",
+ "Mackerel chunks":"Thumb-sized fresh chunks for sharks and rays at night.",
+ "Clam":"Frozen razor or market clams. Tie on with thread; spotfin and rays love it.",
+ "Frozen peas":"Thaw, thread 2–3 on a #8 hook. Chum a few for opaleye.",
+ "Bread balls":"Pinch moist bread around the hook. Works on opaleye in white water."
+};
+const LURE_INFO={
+ "Gulp! sandworm on a Carolina rig":"Slow drag across the sand with pauses. Best artificial for surf perch.",
+ "Gulp! sandworm drifted in the wash":"Light weight, let the backwash roll it. Corbina sight-fishing.",
+ "Gulp! Camo Sandworm":"Same as the bait: slow drag on a Carolina rig.",
+ "1–2\" curly-tail grub (motor oil)":"Small jighead or Carolina rig, slow retrieve along the bottom.",
+ "3–5\" paddle-tail swimbait on 1/2 oz jighead":"Cast, let it hit bottom, slow-roll back with an occasional hop. Halibut king.",
+ "Krocodile / Kastmaster spoon":"Long casts, vary speed. Covers water fast for halibut, bass, mackerel, bonito.",
+ "Lucky Craft Flash Minnow":"Twitch-and-pause jerkbait over sand. Halibut and bass.",
+ "3–4\" plastic swimbait":"Work it along the rocks. Keep it moving or you'll snag.",
+ "Curly-tail grub":"Steady swim along the jetty face.",
+ "Sabiki rig":"Jig it slowly up and down. Catches mackerel, smelt and perch for bait.",
+ "Bonito feather behind a bubble":"Cast far and burn it back fast at first light.",
+ "5–7\" swimbait at night":"Slow-roll under pier lights during squid runs."
+};
+
+/* surf | pier | jetty spots. species = what they're known for */
+const SPOTS=[
+ {n:"Goleta Pier",r:"sb",t:"pier",lat:34.4147,lng:-119.8286,sp:["halibut","perch","mack","wsb","jacksmelt"],tip:"Sandy bottom all around — classic halibut pier. Fish the end with live smelt.",info:"Paid lot at Goleta Beach Park. Bait and tackle on the pier."},
+ {n:"Stearns Wharf",r:"sb",t:"pier",lat:34.4100,lng:-119.6853,sp:["mack","jacksmelt","pierperch","bass"],tip:"Mackerel and jacksmelt off the end; perch along the pilings.",info:"Validated parking on the wharf. Busy on weekends."},
+ {n:"Ventura Pier",r:"sb",t:"pier",lat:34.2747,lng:-119.2906,sp:["perch","halibut","yfc","shark","jacksmelt"],tip:"Fish the surf line under the pier for perch, the end for halibut.",info:"Metered lots at Promenade Park."},
+ {n:"Ventura Harbor Jetties",r:"sb",t:"jetty",lat:34.2437,lng:-119.2668,sp:["bass","opaleye","perch","halibut"],tip:"Inside the harbor mouth stays fishable when the swell is up.",info:"Park at Marina Park or Surfers Knoll. Wet rocks are slick."},
+ {n:"Port Hueneme Pier",r:"sb",t:"pier",lat:34.1475,lng:-119.1953,sp:["yfc","halibut","perch","shark","spotfin"],tip:"Underrated croaker spot in summer. Near a deep submarine canyon.",info:"Paid lot at Hueneme Beach Park."},
+ {n:"Malibu Pier",r:"la",t:"pier",lat:34.0360,lng:-118.6776,sp:["halibut","bass","mack","perch"],tip:"Kelp nearby holds calico bass. Halibut on the sand outside the surf.",info:"PCH parking or paid lot. Stay clear of the surf break."},
+ {n:"Santa Monica Pier",r:"la",t:"pier",lat:34.0094,lng:-118.4973,sp:["mack","jacksmelt","yfc","halibut","shark"],tip:"Lower deck at the end is the spot. Sabiki for mackerel, then use them for halibut.",info:"Paid lots on the beach. Very crowded summer weekends."},
+ {n:"Venice Pier",r:"la",t:"pier",lat:33.9779,lng:-118.4686,sp:["mack","halibut","yfc","perch","bonito"],tip:"Long pier reaches deeper water. Bonito show some summers.",info:"Lot at the end of Washington Blvd."},
+ {n:"Dockweiler State Beach",r:"la",t:"surf",lat:33.9300,lng:-118.4350,sp:["perch","corbina","halibut","shark","yfc"],tip:"Miles of open sand with steady troughs. Great winter perch beach.",info:"Large paid lot. Planes overhead, few crowds."},
+ {n:"King Harbor Breakwall (Redondo)",r:"la",t:"jetty",lat:33.8450,lng:-118.3980,sp:["bass","mack","bonito","opaleye","halibut"],tip:"Redondo Canyon brings deep water close — bonito and bass right off the rocks.",info:"Pay structures by the pier. Fish the harbor side in big swell."},
+ {n:"Cabrillo Beach & San Pedro Breakwater",r:"la",t:"jetty",lat:33.7095,lng:-118.2836,sp:["bass","opaleye","pierperch","halibut","spotfin"],tip:"Inner Cabrillo is sheltered; the breakwater rocks hold bass and perch.",info:"Paid lot at Cabrillo Beach. Fishing pier on site too."},
+ {n:"Belmont Veterans Pier",r:"la",t:"pier",lat:33.7556,lng:-118.1492,sp:["yfc","halibut","shark","spotfin","jacksmelt"],tip:"Behind the Long Beach breakwater — flat water when everywhere else is blown out.",info:"Metered parking on Ocean Blvd and the beach lot."},
+ {n:"Seal Beach Pier",r:"oc",t:"pier",lat:33.7395,lng:-118.1063,sp:["yfc","perch","shark","halibut","spotfin"],tip:"Rays and croaker near the river mouth side. Good night bite in summer.",info:"Pier reopened after the 2016 fire. Metered lots on Main St."},
+ {n:"Bolsa Chica State Beach",r:"oc",t:"surf",lat:33.6960,lng:-118.0490,sp:["perch","corbina","yfc","halibut","shark"],tip:"Top OC surf beach for barred perch and corbina. Dig your own sand crabs.",info:"State park lot (fee). Fire rings for night sessions."},
+ {n:"Huntington Beach Pier",r:"oc",t:"pier",lat:33.6553,lng:-118.0045,sp:["perch","yfc","halibut","shark","mack"],tip:"Fish either side of the surf line for perch and croaker; mackerel off the end.",info:"Meters on PCH and Main St lots."},
+ {n:"Newport & Balboa Piers",r:"oc",t:"pier",lat:33.6073,lng:-117.9290,sp:["mack","perch","halibut","yfc","bonito"],tip:"Newport Canyon puts deep water close. Bonito and mackerel when it's warm.",info:"Metered lots at both piers."},
+ {n:"Newport Harbor West Jetty",r:"oc",t:"jetty",lat:33.5935,lng:-117.8810,sp:["bass","opaleye","halibut","spotfin","perch"],tip:"Inside the harbor channel for halibut and spotfin; jetty rocks for bass.",info:"Street parking on the Peninsula. Never fish the Wedge side in big south swell."},
+ {n:"Dana Point Harbor Jetty",r:"oc",t:"jetty",lat:33.4590,lng:-117.6950,sp:["bass","opaleye","perch","halibut"],tip:"Inner jetty walkway is easy and protected. Bait barge for live anchovies.",info:"Free harbor parking."},
+ {n:"San Clemente Pier",r:"oc",t:"pier",lat:33.4180,lng:-117.6210,sp:["perch","yfc","halibut","mack","bonito"],tip:"Perch and croaker in the surf zone; halibut and mackerel past the break.",info:"Metered lot by the train station."},
+ {n:"Oceanside Pier",r:"sd",t:"pier",lat:33.1932,lng:-117.3866,sp:["halibut","yfc","perch","mack","bonito"],tip:"One of the longest piers on the coast. Fish the end at first light.",info:"Metered lots under the pier."},
+ {n:"Oceanside Harbor Jetties",r:"sd",t:"jetty",lat:33.2050,lng:-117.3970,sp:["bass","halibut","perch","spotfin"],tip:"Harbor mouth halibut on swimbaits; bass along the rocks.",info:"Paid lots in the harbor."},
+ {n:"South Carlsbad State Beach",r:"sd",t:"surf",lat:33.1050,lng:-117.3200,sp:["perch","corbina","yfc","halibut"],tip:"Cobble and sand mix holds perch all winter. Corbina in summer.",info:"Day-use parking or the road shoulder (check signs)."},
+ {n:"Torrey Pines State Beach",r:"sd",t:"surf",lat:32.9200,lng:-117.2590,sp:["perch","corbina","shark","yfc"],tip:"Long, quiet surf beach. Leopard sharks gather near La Jolla Shores in summer.",info:"Paid lot at the south end."},
+ {n:"Mission Bay Jetties",r:"sd",t:"jetty",lat:32.7560,lng:-117.2520,sp:["bass","halibut","spotfin","perch","opaleye"],tip:"Channel side gets moving-tide halibut; bay side holds spotfin.",info:"Free lots at Mission Beach and Quivira."},
+ {n:"Ocean Beach Pier",r:"sd",t:"pier",lat:32.7490,lng:-117.2560,sp:["mack","bonito","halibut","perch","bass"],tip:"Reaches kelp and deep water. Bonito and the odd yellowtail in warm years.",info:"Check status first — the pier has had long closures for repairs."},
+ {n:"Imperial Beach Pier",r:"sd",t:"pier",lat:32.5797,lng:-117.1336,sp:["perch","yfc","halibut","shark"],tip:"Good perch and croaker. Water quality closures are common here.",info:"Check San Diego County beach water quality before you go."}
+];
+const TYPE_LABEL={surf:"Surf",pier:"Pier",jetty:"Jetty"};
+
+/* ================= STATE ================= */
+const store={get(k,d){try{const v=localStorage.getItem("scc:"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("scc:"+k,JSON.stringify(v))}catch(e){}}};
+const S={offset:0,region:store.get("region","all"),tab:"today",
+  ovr:store.get("ovr",{}),baitType:store.get("baitType","surf"),spotType:"all"};
+const DEFAULT_COND={hs:3,per:12,temp:64,src:"example"};
+
+/* ================= LIVE DATA ================= */
+const NOAA="https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?application=socal_shore_caster&format=json&units=english&time_zone=gmt&";
+const LIVE={tides:{},temp:{},sea:{},err:{},at:{}},inflight=new Set();
+const pad=n=>String(n).padStart(2,"0");
+const ymdLocal=ts=>{const d=new Date(ts);return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())};
+const ymdUTC=ts=>new Date(ts).toISOString().slice(0,10).replace(/-/g,"");
+const gmt=s=>Date.parse(s.replace(" ","T")+(s.length<=16?":00Z":"Z"));
+const tideKey=()=>REGIONS[S.region].tide.id+":"+ymdLocal(dayStart());
+const ovrKey=()=>S.region+"|"+ymdLocal(dayStart());
+
+async function getJSON(url,key,maxAge,force){
+  const cached=store.get("c:"+key,null);
+  if(!force&&cached&&Date.now()-cached.at<maxAge)return{data:cached.data,at:cached.at,fresh:true};
+  try{const r=await fetch(url);if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();
+    if(j.error)throw new Error(j.error.message||"No data");
+    store.set("c:"+key,{at:Date.now(),data:j});return{data:j,at:Date.now(),fresh:true}}
+  catch(e){if(cached)return{data:cached.data,at:cached.at,fresh:false};throw e}}
+
+async function loadTides(R,ds,force){
+  const j=await getJSON(NOAA+`product=predictions&datum=MLLW&interval=hilo&station=${R.tide.id}&begin_date=${ymdUTC(ds-dayMs)}&end_date=${ymdUTC(ds+2*dayMs)}`,
+    "tide:"+R.tide.id+":"+ymdLocal(ds),7*dayMs,force);
+  return{...j,events:j.data.predictions.map(p=>({t:gmt(p.t),v:+p.v,type:p.type==="H"?"High":"Low"}))}}
+async function loadTemp(R,force){
+  const j=await getJSON(NOAA+`product=water_temperature&date=latest&station=${R.temp.id}`,"temp:"+R.temp.id,20*6e4,force);
+  const d=j.data.data[0];return{...j,v:+d.v,t:gmt(d.t)}}
+async function loadSea(R,key,force){
+  const j=await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${R.sea[0]}&longitude=${R.sea[1]}&hourly=wave_height,wave_period,wave_direction,swell_wave_height,swell_wave_period,sea_surface_temperature&past_days=1&forecast_days=7&length_unit=imperial&timezone=GMT`,
+    "sea:"+key,60*6e4,force);
+  const h=j.data.hourly;return{...j,h,times:h.time.map(t=>Date.parse(t+":00Z"))}}
+
+function seaDay(sea,ds){if(!sea)return null;let best=-1,temps=[];
+  sea.times.forEach((t,i)=>{if(t>=ds+5*3600e3&&t<=ds+19*3600e3){const hs=sea.h.wave_height[i];
+    if(hs!=null&&(best<0||hs>sea.h.wave_height[best]))best=i;
+    const c=sea.h.sea_surface_temperature[i];if(c!=null)temps.push(c)}});
+  if(best<0)return null;const h=sea.h;
+  return{hs:+h.wave_height[best].toFixed(1),per:Math.round(h.wave_period[best]),dir:h.wave_direction[best],
+    swell:h.swell_wave_height[best],swellPer:h.swell_wave_period[best],
+    sst:temps.length?Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*9/5+32):null}}
+const compass=d=>d==null?"":["N","NE","E","SE","S","SW","W","NW"][Math.round(d/45)%8];
+
+function ensureData(force){
+  const R=REGIONS[S.region],ds=dayStart(),tk=tideKey(),jobs=[];
+  const run=(id,fn,done)=>{if(inflight.has(id)||(!force&&LIVE.err[id]))return;inflight.add(id);
+    jobs.push(fn().then(r=>{done(r);delete LIVE.err[id]}).catch(e=>{LIVE.err[id]=e.message||"Failed"}).finally(()=>inflight.delete(id)))};
+  if(force||!LIVE.tides[tk])run("tide:"+tk,()=>loadTides(R,ds,force),r=>LIVE.tides[tk]=r);
+  if(R.temp&&(force||!LIVE.temp[R.temp.id]))run("temp:"+R.temp.id,()=>loadTemp(R,force),r=>LIVE.temp[R.temp.id]=r);
+  if(force||!LIVE.sea[S.region])run("sea:"+S.region,()=>loadSea(R,S.region,force),r=>LIVE.sea[S.region]=r);
+  if(jobs.length){renderStatus();Promise.all(jobs).then(render)}}
+
+function cond(){
+  const o=S.ovr[ovrKey()];if(o)return{...o,src:"you"};
+  const R=REGIONS[S.region],sd=seaDay(LIVE.sea[S.region],dayStart());
+  if(!sd)return DEFAULT_COND;
+  const tl=R.temp&&LIVE.temp[R.temp.id];
+  const useNoaa=tl&&S.offset===0&&Date.now()-tl.t<6*3600e3;
+  return{hs:sd.hs,per:sd.per,dir:sd.dir,swell:sd.swell,swellPer:sd.swellPer,
+    temp:useNoaa?Math.round(tl.v):(sd.sst??DEFAULT_COND.temp),
+    tempSrc:useNoaa?`NOAA ${R.temp.name} gauge`:sd.sst!=null?"Open-Meteo sea surface":"typical for season",src:"live"}}
+
+function renderStatus(){
+  const el=$("#status"),tk=tideKey(),t=LIVE.tides[tk],sea=LIVE.sea[S.region];
+  const loading=[...inflight].length>0;
+  let cls="",txt;
+  if(t&&sea){const stale=!t.fresh||!sea.fresh;cls=stale?"stale":"live";
+    txt=(stale?"Offline · saved data from ":"Live · NOAA tides + Open-Meteo waves · updated ")+new Date(Math.min(t.at,sea.at)).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});}
+  else if(loading)txt="Loading live NOAA tides and wave forecast…";
+  else{cls="stale";txt=t?"Live tides · wave forecast unavailable":"No connection · showing estimated tides"}
+  el.className="status "+cls;el.querySelector("span").textContent=txt}
+
+/* ================= HELPERS ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtT=t=>t==null?"—":new Date(t).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+const fmtShort=t=>new Date(t).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}).replace(":00","").replace(/\s?([AP])M/i,(m,a)=>a.toLowerCase());
+function dayStart(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate()+S.offset).getTime()}
+const MONTHS="JFMAMJJASOND".split("");
+
+function moonName(p){if(p<0.03||p>0.97)return"New Moon";if(p<0.22)return"Waxing Crescent";if(p<0.28)return"First Quarter";
+  if(p<0.47)return"Waxing Gibbous";if(p<0.53)return"Full Moon";if(p<0.72)return"Waning Gibbous";if(p<0.78)return"Last Quarter";return"Waning Crescent"}
+function moonSVG(p,f){const r=14,c=16;const lit=p<=0.5;// draw shadow side
+  const k=Math.cos(2*Math.PI*p);const rx=Math.abs(k)*r;
+  const sweepOuter=lit?1:0;const sweepInner=(p<0.25||(p>0.5&&p<0.75))?1:0;
+  return `<svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${r}" fill="var(--line)"/>
+  <path d="M${c} ${c-r} A${r} ${r} 0 0 ${sweepOuter} ${c} ${c+r} A${rx} ${r} 0 0 ${sweepInner} ${c} ${c-r}Z" fill="var(--flare)"/></svg>`}
+
+function waveInfo(hs,per){const H=hs*0.3048,P=0.49*H*H*per;
+  const surf=hs<1.5?["Flat","good","Clear water — fish dawn/dusk, go light."]:hs<=4?["Ideal","good","Stirred-up sand; perch and croaker feed."]:hs<=6?["Rough","warn","Heavier sinker, short casts. Piers are easier."]:["Unsafe","bad","Skip the surf. Fish protected piers or harbors."];
+  const pier=hs<=6?["Fishable","good","Normal conditions."]:hs<=9?["Choppy","warn","Fish the end; expect surge on lines."]:["Closed?","bad","Piers may close in big surf."];
+  const jetty=(hs>=5||(hs>=3.5&&per>=15))?["Danger","bad","Waves sweep jetty rocks. Fish the harbor side only."]:hs>=3?["Caution","warn","Stay off wet, low rocks. Watch sets."]:["Fishable","good","Stay on dry, high rocks."];
+  return{P,surf,pier,jetty}}
+
+function speciesScore(sp,month,type,c,hour){
+  if(type&&!sp.types.includes(type))return 0;
+  let s=sp.m[month];if(s===0)return 0;
+  if(sp.warm&&c.temp>=66)s+=0.5;if(sp.warm&&c.temp<60)s-=1;
+  if(sp.cold&&c.temp<62)s+=0.5;if(sp.cold&&c.temp>=68)s-=0.5;
+  if(sp.calm&&c.hs>4)s-=1;
+  return Math.max(0,s)}
+
+function dayModel(){
+  const ds=dayStart(),R=REGIONS[S.region],a=astro(ds,R.lat,R.lng);
+  const lt=LIVE.tides[tideKey()],liveTide=!!lt;
+  const ev=liveTide?lt.events:tideEvents(a.transits);
+  const dayEv=ev.filter(e=>e.t>=ds&&e.t<ds+dayMs);
+  const illum=moonIllum(new Date(ds+12*3600e3));
+  const month=new Date(ds).getMonth();
+  const c=cond();
+  // windows
+  const W=[];
+  if(a.sunrise)W.push({a:a.sunrise-45*6e4,b:a.sunrise+90*6e4,label:"Dawn bite",why:"Low light pushes fish shallow. Best time for corbina, halibut and bonito."});
+  if(a.sunset)W.push({a:a.sunset-90*6e4,b:a.sunset+45*6e4,label:"Dusk bite",why:"Croaker, perch and halibut move in as the light fades."});
+  a.transits.filter(x=>x.t>=ds-3600e3&&x.t<ds+dayMs+3600e3).forEach(x=>W.push({a:x.t-3600e3,b:x.t+3600e3,label:"Solunar major",why:x.kind==="upper"?"Moon overhead. Peak feeding period.":"Moon underfoot. Peak feeding period."}));
+  [a.moonrise,a.moonset].forEach((t,i)=>{if(t)W.push({a:t-30*6e4,b:t+30*6e4,label:"Solunar minor",why:i?"Moonset. Short feeding period.":"Moonrise. Short feeding period."})});
+  dayEv.filter(e=>e.type==="High").forEach(e=>W.push({a:e.t-2*3600e3,b:e.t+30*6e4,label:"Incoming tide push",why:"Last 2 hours of the incoming. Water floods troughs and fish follow it in."}));
+  W.forEach(w=>{w.hot=W.some(o=>o!==w&&o.label!==w.label&&o.a<w.b&&o.b>w.a)});
+  W.sort((x,y)=>x.a-y.a);
+  // score
+  const moonPts=Math.round(25*Math.abs(Math.cos(2*Math.PI*illum.phase)));
+  const tideNearLight=dayEv.some(e=>[a.sunrise,a.sunset].some(s=>s&&Math.abs(e.t-s)<2.5*3600e3));
+  const tidePts=tideNearLight?25:12;
+  const seasonTop=SPECIES.map(sp=>speciesScore(sp,month,null,c)).sort((x,y)=>y-x).slice(0,4).reduce((s,x)=>s+x,0);
+  const seasonPts=Math.round(Math.min(25,seasonTop/12*25));
+  const wavePts=c.hs<1.5?16:c.hs<=4?25:c.hs<=6?14:6;
+  const score=Math.min(100,moonPts+tidePts+seasonPts+wavePts);
+  return{ds,R,a,ev,dayEv,liveTide,illum,month,c,W,score,parts:{moonPts,tidePts,seasonPts,wavePts,tideNearLight}}}
+
+function scoreTone(s){return s>=75?"good":s>=55?"warn":"bad"}
+function verdict(s){return s>=80?"Prime day":s>=65?"Good day":s>=50?"Fair day":"Slow day"}
+
+/* ================= RENDER: TODAY ================= */
+function tideChart(M){
+  const {ds,ev,a,W}=M,x0=8,x1=372,y0=18,y1=108,X=t=>x0+(t-ds)/dayMs*(x1-x0);
+  const near=ev.filter(e=>e.t>ds-dayMs/2&&e.t<ds+1.5*dayMs).map(e=>e.v),lo=Math.min(...near),hi=Math.max(...near);
+  const Y=v=>y1-(v-lo)/((hi-lo)||1)*(y1-y0);
+  let path="",area="";
+  for(let i=0;i<=144;i++){const t=ds+i*dayMs/144,v=tideAt(ev,t);path+=(i?"L":"M")+X(t).toFixed(1)+" "+Y(v).toFixed(1)}
+  area=path+`L${x1} ${y1+6}L${x0} ${y1+6}Z`;
+  const zero=M.liveTide&&lo<0?`<line x1="${x0}" x2="${x1}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)" stroke-width=".6" stroke-dasharray="3 3"/><text x="${x1}" y="${Y(0)-3}" text-anchor="end" font-size="8" fill="var(--muted)">0 ft</text>`:"";
+  const night=[];if(a.sunrise)night.push(`<rect x="${x0}" y="${y0-12}" width="${X(a.sunrise)-x0}" height="${y1-y0+18}" fill="var(--night)"/>`);
+  if(a.sunset)night.push(`<rect x="${X(a.sunset)}" y="${y0-12}" width="${x1-X(a.sunset)}" height="${y1-y0+18}" fill="var(--night)"/>`);
+  const bands=W.map(w=>{const ax=Math.max(x0,X(w.a)),bx=Math.min(x1,X(w.b));if(bx<=ax)return"";
+    return `<rect x="${ax}" y="${y1+12}" width="${bx-ax}" height="8" rx="3" fill="${w.hot?"var(--flare)":"var(--flare-soft)"}"/>`}).join("");
+  const marks=M.dayEv.map(e=>`<circle cx="${X(e.t)}" cy="${Y(e.v)}" r="3.5" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>
+     <text x="${X(e.t)}" y="${e.type==="High"?Y(e.v)-8:Y(e.v)+15}" text-anchor="middle" font-size="9" font-family="IBM Plex Mono,monospace" fill="var(--muted)">${e.type==="High"?"H":"L"} ${fmtShort(e.t)}</text>`).join("");
+  const hrs=[0,6,12,18,24].map(h=>`<text x="${x0+h/24*(x1-x0)}" y="${y1+34}" text-anchor="${h===0?"start":h===24?"end":"middle"}" font-size="9" font-family="IBM Plex Mono,monospace" fill="var(--muted)">${["12a","6a","12p","6p","12a"][h/6]}</text>`).join("");
+  const now=Date.now();let nowM="";
+  if(now>=ds&&now<ds+dayMs){const nx=X(now),nv=tideAt(ev,now);nowM=`<line x1="${nx}" x2="${nx}" y1="${y0-12}" y2="${y1+22}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 3"/><circle cx="${nx}" cy="${Y(nv)}" r="5" fill="var(--ink)"/>`}
+  return `<svg viewBox="0 0 380 150" role="img" aria-label="Estimated tide curve for the day with best fishing windows">
+    ${night.join("")}<path d="${area}" fill="var(--water)"/>${zero}<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+    ${marks}${bands}${nowM}${hrs}</svg>`}
+
+function renderToday(){
+  const M=dayModel(),{a,illum,c,R}=M;
+  const now=Date.now();let tideNow="";
+  if(now>=M.ds&&now<M.ds+dayMs){const rising=tideAt(M.ev,now+6e5)>tideAt(M.ev,now);
+    const next=M.ev.find(e=>e.t>now);tideNow=`<span class="chip ${rising?"good":""}">${rising?"▲ Incoming":"▼ Outgoing"}</span><span class="small muted">Next: ${next.type.toLowerCase()} about ${fmtT(next.t)}</span>`}
+  let range;
+  if(M.liveTide&&M.dayEv.length){const vs=M.dayEv.map(e=>e.v),r=Math.max(...vs)-Math.min(...vs);
+    range=[`${r.toFixed(1)} ft swing${r>=5.5?" (spring tides)":r<3.5?" (neap tides)":""}`,r>=5.5?"good":r>=3.5?"warn":"bad"]}
+  else{const sf=Math.abs(Math.cos(2*Math.PI*moonIllum(new Date(M.ds-1.5*dayMs)).phase));
+    range=sf>0.75?["Big swing (spring tides)","good"]:sf>0.35?["Moderate swing","warn"]:["Small swing (neap tides)","bad"]}
+  const minus=M.liveTide&&M.dayEv.some(e=>e.type==="Low"&&e.v<0);
+  const n0=new Date(),sea=LIVE.sea[S.region],week=sea?[...Array(7)].map((_,i)=>{const d0=new Date(n0.getFullYear(),n0.getMonth(),n0.getDate()+i).getTime();return{i,d0,sd:seaDay(sea,d0)}}).filter(x=>x.sd):[];
+  const wmax=Math.max(4,...week.map(x=>x.sd.hs));
+  const wi=waveInfo(c.hs,c.per);
+  const topSp=SPECIES.map(sp=>({sp,s:speciesScore(sp,M.month,null,c)})).filter(x=>x.s>0).sort((x,y)=>y.s-x.s).slice(0,6);
+  const bt=bestBait(S.baitType,M.month,c);
+  const p=M.parts;
+  $("#v-today").innerHTML=`
+  <div class="panel">
+    <div class="score">
+      <div class="dial"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="var(--line)" stroke-width="9"/>
+        <circle cx="48" cy="48" r="40" fill="none" stroke="var(--${scoreTone(M.score)})" stroke-width="9" stroke-linecap="round" stroke-dasharray="${(M.score/100*251.3).toFixed(1)} 251.3" transform="rotate(-90 48 48)"/></svg>
+        <div class="v num">${M.score}<small>OF 100</small></div></div>
+      <div><div class="eyebrow">${esc(R.name)} shore outlook</div><div class="verdict">${verdict(M.score)}</div>
+        <div class="factors">
+          <span class="chip ${p.moonPts>=17?"good":p.moonPts>=9?"warn":"bad"}">Moon ${p.moonPts}/25</span>
+          <span class="chip ${p.tideNearLight?"good":"warn"}">Tide ${p.tidePts}/25</span>
+          <span class="chip ${p.seasonPts>=18?"good":p.seasonPts>=11?"warn":"bad"}">Season ${p.seasonPts}/25</span>
+          <span class="chip ${p.wavePts>=20?"good":p.wavePts>=12?"warn":"bad"}">Surf ${p.wavePts}/25</span>
+        </div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Tides</h2><span class="chip ${range[1]}">${range[0]}</span></div>
+    ${tideNow?`<div class="factors" style="align-items:center">${tideNow}</div>`:""}
+    <div class="chart">${tideChart(M)}</div>
+    <div class="events">${M.dayEv.map(e=>`<div class="ev"><b>${e.type}</b><span class="num">${fmtT(e.t)}</span>${M.liveTide?`<div class="num small muted">${e.v.toFixed(1)} ft</div>`:""}</div>`).join("")}</div>
+    ${minus?`<p class="note">Minus tide today. Great for scouting troughs, holes and sandbars at low water, then fish them on the incoming.</p>`:""}
+    ${M.liveTide?`<p class="src">NOAA predictions, ${esc(R.tide.name)} station ${R.tide.id}, feet above MLLW. <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=${R.tide.id}" target="_blank" rel="noopener">Full NOAA table</a></p>`
+      :`<p class="note">No connection, so these are estimates from the moon's position (±1 hr, heights relative). Check the
+      <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=${R.tide.id}" target="_blank" rel="noopener">NOAA ${esc(R.tide.name)} tide table</a> when you have signal.</p>`}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Best windows</h2><span class="small muted"><span class="star">●</span> overlaps = hottest</span></div>
+    <div class="windows">${M.W.filter(w=>w.b>M.ds&&w.a<M.ds+dayMs).map(w=>`<div class="win ${w.hot?"hot":""}"><div class="t">${fmtT(w.a)}<br>${fmtT(w.b)}</div><div class="w"><b>${w.hot?'<span class="star">★</span> ':""}${w.label}</b><span class="small muted">${w.why}</span></div></div>`).join("")}</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Waves & water</h2>${c.src==="example"?'<span class="example">Example numbers. Forecast unavailable</span>'
+      :c.src==="you"?`<span class="small muted">Your numbers ${c.when?timeAgo(c.when):""} <button class="reset" id="resetCond">Use forecast</button></span>`
+      :`<span class="chip good">Live forecast</span>`}</div>
+    ${c.src==="live"?`<p class="small">Daytime peak <b class="num">${c.hs} ft @ ${c.per}s</b>${c.dir!=null?` from the ${compass(c.dir)}`:""}${c.swell!=null?` · swell ${c.swell.toFixed(1)} ft @ ${Math.round(c.swellPer)}s`:""}. Water ${c.temp}°F (${esc(c.tempSrc)}).</p>`:""}
+    ${week.length?`<div class="forecast" role="group" aria-label="7-day wave forecast">${week.map(x=>{const r=waveInfo(x.sd.hs,x.sd.per).surf[1];
+      return `<button class="fday" data-day="${x.i}" aria-pressed="${x.i===S.offset}"><span class="val">${x.sd.hs}′</span><span class="col" style="height:${Math.round(8+x.sd.hs/wmax*44)}px;background:var(--${r})"></span><span class="lbl">${new Date(x.d0).toLocaleDateString([], {weekday:"short"})}</span></button>`}).join("")}</div>`:""}
+    <div class="inputs">
+      <label for="hs">Swell (ft)<input id="hs" type="number" inputmode="decimal" min="0" max="30" step="0.5" value="${c.hs}"></label>
+      <label for="per">Period (s)<input id="per" type="number" inputmode="decimal" min="3" max="25" step="1" value="${c.per}"></label>
+      <label for="temp">Water °F<input id="temp" type="number" inputmode="decimal" min="45" max="80" step="1" value="${c.temp}"></label>
+    </div>
+    <div class="power"><span class="big num">${wi.P.toFixed(1)}</span><span>kW per meter of wave crest</span></div>
+    <div class="meter" aria-hidden="true"><i style="left:${Math.min(100,wi.P/30*100)}%"></i></div>
+    <div class="fishability">
+      <div><b>Surf</b><span class="chip ${wi.surf[1]}">${wi.surf[0]}</span><p class="small muted" style="margin-top:4px">${wi.surf[2]}</p></div>
+      <div><b>Pier</b><span class="chip ${wi.pier[1]}">${wi.pier[0]}</span><p class="small muted" style="margin-top:4px">${wi.pier[2]}</p></div>
+      <div><b>Jetty</b><span class="chip ${wi.jetty[1]}">${wi.jetty[0]}</span><p class="small muted" style="margin-top:4px">${wi.jetty[2]}</p></div>
+    </div>
+    <p class="small muted">Seeing something different at the beach? Type your own numbers above. Check the nearby buoys:</p>
+    <div class="links">${R.buoys.map(b=>`<a href="https://www.ndbc.noaa.gov/station_page.php?station=${b[0]}" target="_blank" rel="noopener">${esc(b[1])} buoy</a>`).join("")}
+      <a href="https://cdip.ucsd.edu/m/" target="_blank" rel="noopener">CDIP swell maps</a>
+      <a href="https://www.surfline.com/surf-reports-forecasts-cams/united-states/california/5332921" target="_blank" rel="noopener">Surfline</a></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>What's biting</h2><span class="small muted">${new Date(M.ds).toLocaleDateString([], {month:"long"})} · ${c.temp}°F water</span></div>
+    <div class="bitelist">${topSp.map(x=>`<div class="bite"><div><b>${x.sp.name}</b><div class="small muted">${x.sp.types.map(t=>TYPE_LABEL[t]).join(" · ")}</div></div>
+      <div class="bars" aria-label="Bite strength ${Math.round(x.s)} of 3">${[1,2,3].map(i=>`<i class="${x.s>=i-0.25?"on":""}"></i>`).join("")}</div></div>`).join("")}</div>
+    <div class="links"><a href="https://www.pierfishing.com/" target="_blank" rel="noopener">Pier fishing reports</a><a href="https://www.976tuna.com/" target="_blank" rel="noopener">976-TUNA reports</a></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Bait of the day</h2><span class="chip type">${TYPE_LABEL[S.baitType]}</span></div>
+    <div class="hero-bait"><span class="eyebrow">Best bait</span><span class="name">${esc(bt.baits[0].name)}</span>
+      <span class="small muted">For ${bt.baits[0].for.slice(0,3).join(", ")}</span></div>
+    ${bt.lures[0]?`<div class="hero-bait"><span class="eyebrow">Best lure</span><span class="name" style="font-size:1.4rem">${esc(bt.lures[0].name)}</span></div>`:""}
+    <div class="links"><a href="#bait" data-go="bait">Full bait & rig guide →</a></div>
+  </div>
+
+  <div class="panel">
+    <h2>Sun & moon</h2>
+    <div style="display:flex;align-items:center;gap:10px">${moonSVG(illum.phase,illum.fraction)}<div><b>${moonName(illum.phase)}</b><div class="small muted">${Math.round(illum.fraction*100)}% lit</div></div></div>
+    <div class="grid2">
+      <div class="kv"><span class="k">Sunrise</span><span class="v">${fmtT(a.sunrise)}</span></div>
+      <div class="kv"><span class="k">Sunset</span><span class="v">${fmtT(a.sunset)}</span></div>
+      <div class="kv"><span class="k">Moonrise</span><span class="v">${fmtT(a.moonrise)}</span></div>
+      <div class="kv"><span class="k">Moonset</span><span class="v">${fmtT(a.moonset)}</span></div>
+    </div>
+  </div>`;
+  ["hs","per","temp"].forEach(id=>$("#"+id).addEventListener("change",saveCond));
+  $("#resetCond")?.addEventListener("click",()=>{delete S.ovr[ovrKey()];store.set("ovr",S.ovr);render()});
+}
+function timeAgo(t){const m=Math.round((Date.now()-t)/6e4);return m<60?`${m} min ago`:m<1440?`${Math.round(m/60)} hr ago`:`${Math.round(m/1440)} days ago`}
+function saveCond(){const v=id=>parseFloat($("#"+id).value);
+  const n={hs:v("hs"),per:v("per"),temp:v("temp"),when:Date.now()};
+  if([n.hs,n.per,n.temp].some(isNaN))return;S.ovr[ovrKey()]=n;store.set("ovr",S.ovr);render()}
+
+/* ================= BAIT ================= */
+function bestBait(type,month,c){
+  const sc=SPECIES.map(sp=>({sp,s:speciesScore(sp,month,type,c)})).filter(x=>x.s>0).sort((x,y)=>y.s-x.s);
+  const agg=(key)=>{const m={};sc.forEach(({sp,s})=>sp[key].forEach((b,i)=>{const w=s*(1-i*0.18);
+      (m[b]=m[b]||{name:b,w:0,for:[]}).w+=w;m[b].for.push(sp.name)}));return Object.values(m).sort((x,y)=>y.w-x.w)};
+  return{species:sc,baits:agg("baits"),lures:agg("lures")}}
+
+function renderBait(){
+  const M=dayModel(),c=M.c,bt=bestBait(S.baitType,M.month,c),wi=waveInfo(c.hs,c.per);
+  const typeTips={surf:["Fish the last 2 hours of the incoming tide through the first hour of the outgoing.","Look for troughs, rip currents and \"cuts\" — darker water with fewer breaking waves.","Walk and cast. If no bites in 15 minutes, move 50 yards."],
+    pier:["No fishing license needed on public ocean piers in California.","Surf zone under the pier: perch and croaker. Past the break: halibut. End: mackerel, bonito, bass.","Bring a pier net or treble-hook gaff to land big fish."],
+    jetty:["Wear grippy shoes and never turn your back on the ocean.","Moving water at tide changes is the prime jetty time.","Cast parallel to the rocks. That is where bass and opaleye feed."]};
+  const sinker=S.baitType==="surf"?(c.hs>4?"Waves are up: use a 1–2 oz pyramid sinker to hold bottom.":c.hs<1.5?"Calm water: drop to 1/4 oz and lighter leader. Fish are spooky.":"Normal surf: 1/2–1 oz egg or pyramid sinker."):S.baitType==="jetty"&&wi.jetty[1]!=="good"?"Swell is up: fish the harbor side of the jetty.":"";
+  $("#v-bait").innerHTML=`
+  <div class="seg" role="group" aria-label="Where are you fishing">${["surf","pier","jetty"].map(t=>`<button data-bt="${t}" aria-pressed="${S.baitType===t}">${TYPE_LABEL[t]}</button>`).join("")}</div>
+  <div class="panel">
+    <div class="panel-head"><h2>Top baits</h2><span class="small muted">${new Date(M.ds).toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})} · ${c.temp}°F</span></div>
+    <div class="rank">${bt.baits.slice(0,4).map((b,i)=>`<div class="row"><span class="n">${i+1}</span><div><b>${esc(b.name)}</b><span class="small muted">${esc(BAIT_INFO[b.name]||"")}</span><div class="small" style="margin-top:3px">For: ${b.for.join(", ")}</div></div></div>`).join("")}</div>
+  </div>
+  ${bt.lures.length?`<div class="panel"><h2>Top lures</h2>
+    <div class="rank">${bt.lures.slice(0,3).map((b,i)=>`<div class="row"><span class="n">${i+1}</span><div><b>${esc(b.name)}</b><span class="small muted">${esc(LURE_INFO[b.name]||"")}</span><div class="small" style="margin-top:3px">For: ${b.for.join(", ")}</div></div></div>`).join("")}</div></div>`:""}
+  <div class="panel"><h2>Rigs for today's targets</h2>
+    ${bt.species.slice(0,3).map(({sp})=>`<div><h3>${sp.name}</h3><div class="rig">${esc(sp.rig)}</div><p class="small muted" style="margin-top:6px">${esc(sp.where)}</p></div>`).join("")}
+  </div>
+  <div class="panel"><h2>${TYPE_LABEL[S.baitType]} tips</h2>
+    ${sinker?`<p class="note">${sinker}</p>`:""}
+    <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">${typeTips[S.baitType].map(t=>`<li>${t}</li>`).join("")}</ul>
+  </div>`;
+}
+
+/* ================= SPOTS ================= */
+function spotScore(sp,M){const c=M.c,wi=waveInfo(c.hs,c.per);
+  const s=sp.sp.map(id=>speciesScore(SPECIES.find(x=>x.id===id),M.month,sp.t,c)).sort((x,y)=>y-x).slice(0,3);
+  let v=s.reduce((a,b)=>a+b,0)/9.5*70+M.parts.moonPts/25*10+M.parts.tidePts/25*10;
+  const cond=sp.t==="surf"?wi.surf[1]:sp.t==="pier"?wi.pier[1]:wi.jetty[1];
+  v+=cond==="good"?10:cond==="warn"?2:-25;
+  return Math.max(5,Math.min(99,Math.round(v)))}
+function renderSpots(){
+  const M=dayModel();
+  const list=SPOTS.filter(s=>(S.region==="all"||s.r===S.region)&&(S.spotType==="all"||s.t===S.spotType))
+    .map(s=>({s,score:spotScore(s,M),biting:s.sp.map(id=>SPECIES.find(x=>x.id===id)).filter(x=>speciesScore(x,M.month,s.t,M.c)>=2)}))
+    .sort((a,b)=>b.score-a.score);
+  $("#v-spots").innerHTML=`
+  <div class="seg" role="group" aria-label="Spot type">${["all","surf","pier","jetty"].map(t=>`<button data-st="${t}" aria-pressed="${S.spotType===t}">${t==="all"?"All":TYPE_LABEL[t]}</button>`).join("")}</div>
+  <p class="small muted">${list.length} spots in ${esc(REGIONS[S.region].name)}, ranked for ${new Date(M.ds).toLocaleDateString([], {weekday:"long"})} by season, moon, tide and the surf you entered.</p>
+  ${list.map((x,i)=>`<article class="spot">
+    <div class="spot-top"><div><span class="rankno">#${i+1}</span><h3>${esc(x.s.n)}</h3>
+      <div class="factors"><span class="chip type">${TYPE_LABEL[x.s.t]}</span><span class="chip">${esc(REGIONS[x.s.r].name)}</span></div></div>
+      <div class="badge ${scoreTone(x.score)}"><span class="num">${x.score}</span><small>TODAY</small></div></div>
+    <p><b>Biting:</b> ${x.biting.length?x.biting.map(b=>b.name).join(", "):"<span class='muted'>Slow season for this spot's main species</span>"}</p>
+    <p class="small">${esc(x.s.tip)}</p>
+    <details><summary>Parking, notes & directions</summary>
+      <p class="small muted">${esc(x.s.info)}</p>
+      <div class="links" style="margin-top:8px"><a href="https://www.google.com/maps/search/?api=1&query=${x.s.lat},${x.s.lng}" target="_blank" rel="noopener">Directions</a>
+      <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=${REGIONS[x.s.r].tide.id}" target="_blank" rel="noopener">NOAA tides</a></div>
+    </details></article>`).join("")}`;
+}
+
+/* ================= FISH ================= */
+function renderFish(){
+  const M=dayModel();
+  const list=SPECIES.map(sp=>({sp,s:speciesScore(sp,M.month,null,M.c)})).sort((a,b)=>b.s-a.s);
+  $("#v-fish").innerHTML=`<p class="small muted">Sorted by how well each is biting this month. Highlighted box = current month.</p>`+
+  list.map(({sp,s})=>`<div class="panel">
+    <div class="panel-head"><h2>${sp.name}</h2><div class="bars">${[1,2,3].map(i=>`<i class="${s>=i-0.25?"on":""}"></i>`).join("")}</div></div>
+    <div class="factors">${sp.types.map(t=>`<span class="chip type">${TYPE_LABEL[t]}</span>`).join("")}${sp.night?'<span class="chip">Night bite</span>':""}</div>
+    <div class="months" aria-label="Season by month">${sp.m.map((v,i)=>`<span class="l${v} ${i===M.month?"cur":""}">${MONTHS[i]}</span>`).join("")}</div>
+    <p class="small"><b>Bait:</b> ${sp.baits.join(", ")}${sp.lures.length?`<br><b>Lures:</b> ${sp.lures.join(", ")}`:""}</p>
+    <p class="small muted">${esc(sp.where)}</p>
+    <p class="small"><b>Limit:</b> ${esc(sp.limit)}</p>
+  </div>`).join("")+`<p class="note">Limits change. Confirm current rules in the <a href="https://wildlife.ca.gov/Fishing/Ocean/Regulations/Sport-Fishing" target="_blank" rel="noopener">CDFW ocean sport fishing regulations</a>. A license is required everywhere except public piers.</p>`;
+}
+
+/* ================= SHELL ================= */
+function render(){
+  const ds=dayStart(),d=new Date(ds);
+  $("#dateLabel").innerHTML=`${d.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}<small>${S.offset===0?"Today":S.offset===1?"Tomorrow":S.offset===-1?"Yesterday":(S.offset>0?"In "+S.offset+" days":-S.offset+" days ago")}</small>`;
+  $("#prev").disabled=S.offset<=-7;$("#next").disabled=S.offset>=30;
+  $("#region").value=S.region;
+  ensureData();renderStatus();
+  ({today:renderToday,spots:renderSpots,bait:renderBait,fish:renderFish})[S.tab]();
+}
+$("#refresh").addEventListener("click",()=>ensureData(true));
+window.addEventListener("online",()=>ensureData(true));
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+function go(tab){S.tab=tab;document.querySelectorAll(".view").forEach(v=>v.hidden=v.id!=="v-"+tab);
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===tab?"page":"false"));
+  render();window.scrollTo(0,0)}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.tab)));
+$("#prev").addEventListener("click",()=>{S.offset--;render()});
+$("#next").addEventListener("click",()=>{S.offset++;render()});
+$("#region").addEventListener("change",e=>{S.region=e.target.value;store.set("region",S.region);render()});
+document.addEventListener("click",e=>{
+  const bt=e.target.closest("[data-bt]");if(bt){S.baitType=bt.dataset.bt;store.set("baitType",S.baitType);render();return}
+  const st=e.target.closest("[data-st]");if(st){S.spotType=st.dataset.st;render();return}
+  const fd=e.target.closest("[data-day]");if(fd){S.offset=+fd.dataset.day;render();return}
+  const g=e.target.closest("[data-go]");if(g){e.preventDefault();go(g.dataset.go)}});
+const h=(location.hash||"").slice(1);
+go(["today","spots","bait","fish"].includes(h)?h:"today");
+setInterval(()=>{if(S.tab==="today"&&S.offset===0&&!document.activeElement?.matches("input"))render()},5*6e4);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+</script>
+</body>
+</html>
