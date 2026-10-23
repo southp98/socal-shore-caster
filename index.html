@@ -189,7 +189,40 @@ footer{font-size:.75rem;color:var(--muted);text-align:center;padding-block:4px 1
 .fday .lbl{font-size:.68rem;font-weight:600;text-transform:uppercase;color:var(--muted)}
 .fday .val{font-family:var(--mono);font-size:.72rem}
 .src{font-size:.72rem;color:var(--muted)}
-.reset{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:4px 10px;font-size:.78rem;cursor:pointer}
+.reset{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--accent)}
+nav.tabs .in{grid-template-columns:repeat(5,1fr)!important}
+nav.tabs button{font-size:.74rem!important;letter-spacing:.05em!important}
+.go{border:2px solid var(--accent)}
+.goday{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+.goday:first-of-type{border-top:0;padding-top:0}
+.goday-top{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+.goday h3{font-size:1.3rem}
+.gowin{font-size:.95rem;color:var(--accent);font-weight:500}
+.goday .reset{align-self:flex-start}
+.windbars{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:2px;align-items:end;overflow:hidden}
+.wb{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;color:var(--muted)}
+.wb i{width:70%;border-radius:2px 2px 0 0}
+.wb .num{font-size:.6rem;color:var(--ink)}
+.wb .lbl{font-size:.55rem;white-space:nowrap}
+.photo{margin:0;border-radius:10px;overflow:hidden;background:var(--bg);min-height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px}
+.photo img{max-height:180px;width:auto;border-radius:8px;object-fit:contain}
+.inputs select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);font-size:.95rem;text-transform:none;letter-spacing:0;color:var(--ink);font-weight:500}
+.verdict-line{font-family:var(--display);font-size:1.15rem;font-weight:700;text-transform:uppercase;line-height:1.1}
+.verdict-line.good{color:var(--good)} .verdict-line.bad{color:var(--bad)}
+.checks{display:flex;flex-direction:column}
+.check{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.check:first-child{border-top:0}
+.check input{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.check input:checked+span{color:var(--muted);text-decoration:line-through}
+.pinform{display:flex;flex-direction:column;gap:8px}
+.pinform input{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)}
+.pins{display:flex;flex-direction:column}
+.pin{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.cal{display:flex;flex-direction:column}
+.calrow{display:grid;grid-template-columns:58px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.calrow:first-child{border-top:0}
+.caldate{font-size:.85rem;font-weight:500}
+.caldate small{display:block;color:var(--muted);font-size:.7rem}
 </style>
 </head>
 <body>
@@ -212,6 +245,7 @@ footer{font-size:.75rem;color:var(--muted);text-align:center;padding-block:4px 1
   <section class="view" id="v-spots" hidden></section>
   <section class="view" id="v-bait" hidden></section>
   <section class="view" id="v-fish" hidden></section>
+  <section class="view" id="v-trip" hidden></section>
   <footer>Tides and water temperature from NOAA CO-OPS. Wave forecast from Open-Meteo. With no signal, the app falls back to the last saved data or to tide estimates calculated on your phone. Always check posted surf warnings before heading out.</footer>
 </main>
 
@@ -220,6 +254,7 @@ footer{font-size:.75rem;color:var(--muted);text-align:center;padding-block:4px 1
   <button data-tab="spots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Spots</button>
   <button data-tab="bait"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v9a5 5 0 1 1-5 5"/><path d="M7 16l-2-2"/></svg>Bait</button>
   <button data-tab="fish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3-5 8-6 12-4l6-3-1 7 1 7-6-3c-4 2-9 1-12-4z"/><circle cx="7" cy="11" r="1" fill="currentColor"/></svg>Fish</button>
+  <button data-tab="trip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.5h6V4"/><path d="M9 11l2 2 4-4"/><path d="M9 17h6"/></svg>Trip</button>
 </div></nav>
 
 <script>
@@ -337,6 +372,22 @@ const SPECIES=[
   where:"Under and around pier pilings, mid-depth to bottom.",limit:"Counts toward 20 surfperch combined."}
 ];
 
+/* ID marks, lookalikes, minimum size (inches, 0 = none) and photo page for each species */
+const FISHID={
+ perch:{min:0,wiki:"Barred_surfperch",id:"Oval, silver body with 8–10 brassy or orange vertical bars and spots.",look:"Walleye surfperch: huge eyes, black-tipped belly fins, no bars."},
+ corbina:{min:0,wiki:"California_corbina",id:"Long, slender, gray-blue back. One short barbel under the chin. No yellow on the fins.",look:"Yellowfin croaker: yellow fins and wavy diagonal stripes."},
+ yfc:{min:0,wiki:"Yellowfin_croaker",id:"Silvery with wavy dark diagonal lines, yellow fins, small chin barbel.",look:"Corbina: no yellow fins, no stripes."},
+ spotfin:{min:0,wiki:"Spotfin_croaker",id:"Big black spot at the base of the pectoral fin. Males get a golden belly in summer.",look:"Yellowfin croaker: no black spot, yellow fins."},
+ halibut:{min:22,wiki:"California_halibut",id:"Large flatfish. Mouth reaches past the eye; lateral line arches high over the pectoral fin.",look:"Sanddabs and turbot: small mouth, straight lateral line. Don't count them as halibut."},
+ bass:{min:14,wiki:"Kelp_bass",id:"Calico: checkered pale blotches on the back. Sand bass: dark vertical bars, very tall 3rd dorsal spine.",look:"Both count toward the same 5-fish bass limit."},
+ mack:{min:0,wiki:"Pacific_chub_mackerel",id:"Wavy dark bars on a green back. Two widely separated dorsal fins.",look:"Jack mackerel: bony ridge (scutes) along the side, no wavy bars."},
+ bonito:{min:0,wiki:"Pacific_bonito",id:"Slanted dark stripes on the back, toothy mouth, tuna shape.",look:"Skipjack: stripes on the belly instead of the back."},
+ jacksmelt:{min:0,wiki:"Jacksmelt",id:"Long, slender, with a bright silver stripe down the side.",look:"Topsmelt: smaller, fewer scales between the two dorsal fins."},
+ shark:{min:36,wiki:"Leopard_shark",id:"Leopard shark: bold black saddles and spots on a gray back.",look:"Gray smoothhound: plain gray. Shovelnose guitarfish: flat and ray-like."},
+ opaleye:{min:10,wiki:"Girella_nigricans",id:"Olive-green body, bright blue eyes, 1–2 white spots under the dorsal fin.",look:"Halfmoon: bluish, crescent tail, no white spots."},
+ wsb:{min:28,wiki:"White_seabass",id:"Long silver body with a raised ridge along the belly. Juveniles have dark vertical bars.",look:"Shortfin corvina: yellow inside the mouth. Juvenile seabass are often mistaken for corbina or croaker."},
+ pierperch:{min:0,wiki:"Walleye_surfperch",id:"Walleye: very large eyes, black-tipped belly fins. Pile perch: dark bar mid-body, tall front dorsal spine.",look:"Shiner perch: small with yellow bars. Different limits apply."}
+};
 const BAIT_INFO={
  "Sand crabs":"Dig them where waves recede — look for little V-shaped ripples. Soft-shells are gold. Hook up through the bottom, point out the top of the shell.",
  "Gulp! Camo Sandworm":"Stays on the hook through rough surf. Cut to 1\" for perch and keep it in the Gulp juice.",
@@ -407,6 +458,17 @@ const GAUGE={"9410840":"Santa Monica","9410230":"La Jolla"};
  ["TWC0419"],["TWC0419"],["TWC0419"],["TWC0419"],["9410230","9410230"],["9410230","9410230"],["9410230","9410230"],["9410230","9410230"],["9410120"]]
  .forEach(([t,g],i)=>{const s=SPOTS[i];s.i=i;s.id=s.n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
    s.tide={id:t,name:STN[t]};s.temp=g?{id:g,name:GAUGE[g]}:null});
+/* compass bearing each beach faces (out to sea) — wind from within 60° of this is onshore */
+[180,160,215,225,225,170,220,240,255,260,180,180,200,220,215,210,200,200,240,250,250,255,270,270,270,265].forEach((f,i)=>SPOTS[i].face=f);
+/* known water-quality problems and fish-consumption advisories */
+const WQ={
+  "imperial-beach-pier":{level:"bad",text:"Often closed by Tijuana River sewage flows, sometimes for months. Check the county site before you go."},
+  "belmont-veterans-pier":{level:"warn",text:"LA River outflow nearby. Water quality is often poor, especially after rain."},
+  "seal-beach-pier":{level:"warn",text:"San Gabriel River mouth nearby. Grades drop after rain."},
+  "cabrillo-beach-san-pedro-breakwater":{level:"warn",text:"Inner Cabrillo has a history of poor summer grades. The outer beach is usually better."}};
+const DDT=new Set(["king-harbor-breakwall-redondo","cabrillo-beach-san-pedro-breakwater","belmont-veterans-pier","seal-beach-pier"]);
+const WQ_LINK={sb:["Beach Report Card","https://beachreportcard.org"],la:["Beach Report Card","https://beachreportcard.org"],
+  oc:["OC Beach Info","https://ocbeachinfo.com"],sd:["SD Beach Info","https://www.sdbeachinfo.com"]};
 const TYPE_LABEL={surf:"Surf",pier:"Pier",jetty:"Jetty"};
 
 /* ================= STATE ================= */
@@ -424,7 +486,8 @@ const ymdLocal=ts=>{const d=new Date(ts);return d.getFullYear()+pad(d.getMonth()
 const ymdUTC=ts=>new Date(ts).toISOString().slice(0,10).replace(/-/g,"");
 const gmt=s=>Date.parse(s.replace(" ","T")+(s.length<=16?":00Z":"Z"));
 const beach=()=>SPOTS.find(s=>s.id===S.beach)||SPOTS[14];
-const tideKey=()=>beach().tide.id+":"+ymdLocal(dayStart());
+/* tides for any day come from the selected beach's station (timing varies only minutes along the coast) */
+const tideKey=(off=S.offset)=>beach().tide.id+":"+ymdLocal(dayStart(off));
 const ovrKey=()=>beach().id+"|"+ymdLocal(dayStart());
 
 async function getJSON(url,key,maxAge,force){
@@ -449,6 +512,30 @@ async function loadSea(force){
   const arr=Array.isArray(j.data)?j.data:[j.data];
   return{...j,spots:arr.map(d=>({h:d.hourly,times:d.hourly.time.map(t=>Date.parse(t+":00Z"))}))}}
 const seaFor=s=>LIVE.sea.all?.spots[s.i]||null;
+/* wind + rain at every beach (includes the past 3 days for the rain advisory) */
+async function loadWx(force){
+  const j=await getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${SPOTS.map(s=>s.lat).join(",")}&longitude=${SPOTS.map(s=>s.lng).join(",")}&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation&past_days=3&forecast_days=7&wind_speed_unit=mph&precipitation_unit=inch&timezone=GMT`,
+    "wx:all",60*6e4,force);
+  const arr=Array.isArray(j.data)?j.data:[j.data];
+  return{...j,spots:arr.map(d=>({h:d.hourly,times:d.hourly.time.map(t=>Date.parse(t+":00Z"))}))}}
+const wxFor=s=>LIVE.wx?.spots[s.i]||null;
+const angDiff=(a,b)=>{const d=Math.abs(((a-b)%360+360)%360);return d>180?360-d:d};
+function windRel(dir,face){const d=angDiff(dir,face);return d<60?"onshore":d>120?"offshore":"cross-shore"}
+function windDay(wx,ds,face){if(!wx)return null;const hrs=[];
+  wx.times.forEach((t,i)=>{if(t>=ds+5*3600e3&&t<=ds+20*3600e3&&wx.h.wind_speed_10m[i]!=null)
+    hrs.push({t,mph:wx.h.wind_speed_10m[i],gust:wx.h.wind_gusts_10m[i],dir:wx.h.wind_direction_10m[i],rel:windRel(wx.h.wind_direction_10m[i],face)})});
+  if(!hrs.length)return null;
+  const inR=(a,b)=>hrs.filter(x=>x.t>=ds+a*3600e3&&x.t<=ds+b*3600e3);
+  const am=inR(6,10),pm=inR(12,17);
+  const avg=a=>a.length?a.reduce((s,x)=>s+x.mph,0)/a.length:null;
+  const pmMax=pm.reduce((m,x)=>x.mph>m.mph?x:m,pm[0]||hrs[0]);
+  const blow=hrs.find(x=>x.t>=ds+6*3600e3&&x.mph>=12);
+  const at=t=>hrs.reduce((b,x)=>Math.abs(x.t-t)<Math.abs(b.t-t)?x:b,hrs[0]);
+  return{hrs,am:avg(am),amRel:am[0]?.rel,pm:pmMax,calmUntil:blow?blow.t:null,at}}
+function rainPast(wx,ref){if(!wx)return null;let inches=0,last=null;
+  wx.times.forEach((t,i)=>{const p=wx.h.precipitation[i]||0;if(t>ref-72*3600e3&&t<=ref){inches+=p;if(p>=0.02)last=t}});
+  return{inches,last}}
+const windTone=m=>m<=8?"good":m<=14?"warn":"bad";
 
 function seaDay(sea,ds){if(!sea)return null;let best=-1,temps=[];
   sea.times.forEach((t,i)=>{if(t>=ds+5*3600e3&&t<=ds+19*3600e3){const hs=sea.h.wave_height[i];
@@ -461,21 +548,23 @@ function seaDay(sea,ds){if(!sea)return null;let best=-1,temps=[];
 const compass=d=>d==null?"":["N","NE","E","SE","S","SW","W","NW"][Math.round(d/45)%8];
 
 function ensureData(force){
-  const R=beach(),ds=dayStart(),tk=tideKey(),jobs=[];
+  const R=beach(),jobs=[];
   const run=(id,fn,done)=>{if(inflight.has(id)||(!force&&LIVE.err[id]))return;inflight.add(id);
     jobs.push(fn().then(r=>{done(r);delete LIVE.err[id]}).catch(e=>{LIVE.err[id]=e.message||"Failed"}).finally(()=>inflight.delete(id)))};
-  if(force||!LIVE.tides[tk])run("tide:"+tk,()=>loadTides(R,ds,force),r=>LIVE.tides[tk]=r);
+  [...new Set([S.offset,0,1,2,3])].forEach(off=>{const tk=tideKey(off),ds=dayStart(off);
+    if(force||!LIVE.tides[tk])run("tide:"+tk,()=>loadTides(R,ds,force),r=>LIVE.tides[tk]=r)});
+  if(force||!LIVE.wx)run("wx:all",()=>loadWx(force),r=>LIVE.wx=r);
   if(R.temp&&(force||!LIVE.temp[R.temp.id]))run("temp:"+R.temp.id,()=>loadTemp(R,force),r=>LIVE.temp[R.temp.id]=r);
   if(force||!LIVE.sea.all)run("sea:all",()=>loadSea(force),r=>LIVE.sea.all=r);
   if(jobs.length){renderStatus();Promise.all(jobs).then(render)}}
 
 /* conditions at a beach for the selected day: your own numbers > live forecast > example */
-function cond(R=beach()){
-  const o=R===beach()&&S.ovr[ovrKey()];if(o)return{...o,src:"you"};
-  const sd=seaDay(seaFor(R),dayStart());
+function cond(R=beach(),off=S.offset){
+  const o=R===beach()&&off===S.offset&&S.ovr[ovrKey()];if(o)return{...o,src:"you"};
+  const sd=seaDay(seaFor(R),dayStart(off));
   if(!sd)return DEFAULT_COND;
   const tl=R.temp&&LIVE.temp[R.temp.id];
-  const useNoaa=tl&&S.offset===0&&Date.now()-tl.t<6*3600e3;
+  const useNoaa=tl&&off===0&&Date.now()-tl.t<6*3600e3;
   return{hs:sd.hs,per:sd.per,dir:sd.dir,swell:sd.swell,swellPer:sd.swellPer,
     temp:useNoaa?Math.round(tl.v):(sd.sst??DEFAULT_COND.temp),
     tempSrc:useNoaa?`NOAA ${R.temp.name} gauge`:sd.sst!=null?"Open-Meteo sea surface":"typical for season",src:"live"}}
@@ -485,7 +574,7 @@ function renderStatus(){
   const loading=[...inflight].length>0;
   let cls="",txt;
   if(t&&sea){const stale=!t.fresh||!sea.fresh;cls=stale?"stale":"live";
-    txt=(stale?"Offline · saved data from ":"Live · NOAA tides + Open-Meteo waves · updated ")+new Date(Math.min(t.at,sea.at)).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});}
+    txt=(stale?"Offline · saved data from ":"Live · NOAA tides + Open-Meteo waves & wind · updated ")+new Date(Math.min(t.at,sea.at)).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});}
   else if(loading)txt="Loading live NOAA tides and wave forecast…";
   else{cls="stale";txt=t?"Live tides · wave forecast unavailable":"No connection · showing estimated tides"}
   el.className="status "+cls;el.querySelector("span").textContent=txt}
@@ -495,7 +584,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmtT=t=>t==null?"—":new Date(t).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
 const fmtShort=t=>new Date(t).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}).replace(":00","").replace(/\s?([AP])M/i,(m,a)=>a.toLowerCase());
-function dayStart(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate()+S.offset).getTime()}
+function dayStart(off=S.offset){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate()+off).getTime()}
 const MONTHS="JFMAMJJASOND".split("");
 
 function moonName(p){if(p<0.03||p>0.97)return"New Moon";if(p<0.22)return"Waxing Crescent";if(p<0.28)return"First Quarter";
@@ -521,14 +610,16 @@ function speciesScore(sp,month,type,c,hour){
   if(sp.calm&&c.hs>4)s-=1;
   return Math.max(0,s)}
 
-function dayModel(){
-  const ds=dayStart(),R=beach(),a=astro(ds,R.lat,R.lng);
-  const lt=LIVE.tides[tideKey()],liveTide=!!lt;
+const ASTRO=new Map();
+function astroAt(ds,R){const k=ds+"|"+R.r;if(!ASTRO.has(k)){const g=REGIONS[R.r];ASTRO.set(k,astro(ds,g.lat,g.lng))}return ASTRO.get(k)}
+function dayModel(R=beach(),off=S.offset){
+  const ds=dayStart(off),a=astroAt(ds,R);
+  const lt=LIVE.tides[tideKey(off)],liveTide=!!lt;
   const ev=liveTide?lt.events:tideEvents(a.transits);
   const dayEv=ev.filter(e=>e.t>=ds&&e.t<ds+dayMs);
   const illum=moonIllum(new Date(ds+12*3600e3));
   const month=new Date(ds).getMonth();
-  const c=cond();
+  const c=cond(R,off),wd=windDay(wxFor(R),ds,R.face);
   // windows
   const W=[];
   if(a.sunrise)W.push({a:a.sunrise-45*6e4,b:a.sunrise+90*6e4,label:"Dawn bite",why:"Low light pushes fish shallow. Best time for corbina, halibut and bonito."});
@@ -539,15 +630,43 @@ function dayModel(){
   W.forEach(w=>{w.hot=W.some(o=>o!==w&&o.label!==w.label&&o.a<w.b&&o.b>w.a)});
   W.sort((x,y)=>x.a-y.a);
   // score
-  const moonPts=Math.round(25*Math.abs(Math.cos(2*Math.PI*illum.phase)));
+  const moonPts=Math.round(20*Math.abs(Math.cos(2*Math.PI*illum.phase)));
   const tideNearLight=dayEv.some(e=>[a.sunrise,a.sunset].some(s=>s&&Math.abs(e.t-s)<2.5*3600e3));
   const tidePts=tideNearLight?25:12;
   const seasonTop=R.sp.map(id=>speciesScore(SPECIES.find(x=>x.id===id),month,R.t,c)).sort((x,y)=>y-x).slice(0,3).reduce((s,x)=>s+x,0);
   const seasonPts=Math.round(Math.min(25,seasonTop/9*25));
   const wr=waveInfo(c.hs,c.per)[R.t][1];
-  const wavePts=R.t==="surf"?(c.hs<1.5?16:c.hs<=4?25:c.hs<=6?14:6):(wr==="good"?25:wr==="warn"?14:6);
-  const score=Math.min(100,moonPts+tidePts+seasonPts+wavePts);
-  return{ds,R,a,ev,dayEv,liveTide,illum,month,c,W,score,parts:{moonPts,tidePts,seasonPts,wavePts,tideNearLight}}}
+  const wavePts=R.t==="surf"?(c.hs<1.5?10:c.hs<=4?15:c.hs<=6?8:3):(wr==="good"?15:wr==="warn"?8:3);
+  // wind: judged on the morning, when most shore fishing happens
+  let windPts=10;
+  if(wd&&wd.am!=null){windPts=wd.am<=6?15:wd.am<=10?12:wd.am<=15?7:3;if(wd.amRel==="onshore"&&wd.am>10&&R.t!=="jetty")windPts-=3}
+  const score=Math.max(0,Math.min(100,moonPts+tidePts+seasonPts+wavePts+windPts));
+  return{ds,off,R,a,ev,dayEv,liveTide,illum,month,c,wd,W,score,parts:{moonPts,tidePts,seasonPts,wavePts,windPts,tideNearLight}}}
+
+/* best time to fish at a beach on a day: favor overlapping windows in light wind */
+function bestWindow(M){const now=Date.now();
+  const cands=M.W.filter(w=>w.label!=="Solunar minor"&&w.a>=M.ds+4*3600e3&&w.a<M.ds+21*3600e3&&w.b>now);
+  let best=null,bs=-99;
+  cands.forEach(w=>{let s=(w.hot?2:0)+(/Dawn|Dusk/.test(w.label)?1.5:0)+(w.label==="Incoming tide push"?1:0);
+    const wnd=M.wd?.at((w.a+w.b)/2);if(wnd){s+=wnd.mph<=8?1:wnd.mph>=15?-2:0}
+    if(s>bs){bs=s;best={...w,wind:wnd}}});
+  return best}
+
+/* 3-day "Go now" plan: best beach and window for today, tomorrow and the day after */
+function goNow(){
+  return[0,1,2,3].map(off=>{
+    const ranked=SPOTS.map(sp=>{const M=dayModel(sp,off),w=bestWindow(M);
+      const unsafe=waveInfo(M.c.hs,M.c.per)[sp.t][1]==="bad"||WQ[sp.id]?.level==="bad";
+      return{sp,M,w,s:M.score+(w?.hot?4:0)-(unsafe?40:0)}}).filter(x=>x.w).sort((a,b)=>b.s-a.s);
+    return{off,ds:dayStart(off),top:ranked[0],alt:ranked.slice(1,3),mine:ranked.find(x=>x.sp.id===beach().id)}}).filter(d=>d.top).slice(0,3)}
+function planReasons(x){const M=x.M,r=[];
+  const hi=M.dayEv.filter(e=>e.type==="High").find(e=>Math.abs(e.t-(x.w.a+x.w.b)/2)<4*3600e3);
+  if(hi)r.push(`High tide ${fmtShort(hi.t)}${M.liveTide?` (${hi.v.toFixed(1)} ft)`:""}`);
+  if(M.c.src!=="example")r.push(`Waves ${M.c.hs} ft @ ${M.c.per}s`);
+  if(x.w.wind)r.push(`Wind ${Math.round(x.w.wind.mph)} mph ${x.w.wind.rel}`);
+  const p=M.illum.phase;if(p<0.07||p>0.93)r.push("New moon");else if(Math.abs(p-0.5)<0.07)r.push("Full moon");
+  if(M.c.src!=="example")r.push(`${M.c.temp}°F water`);
+  return r}
 
 function scoreTone(s){return s>=75?"good":s>=55?"warn":"bad"}
 function verdict(s){return s>=80?"Prime day":s>=65?"Good day":s>=50?"Fair day":"Slow day"}
@@ -574,6 +693,60 @@ function tideChart(M){
     ${night.join("")}<path d="${area}" fill="var(--water)"/>${zero}<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
     ${marks}${bands}${nowM}${hrs}</svg>`}
 
+function goNowHTML(){
+  const days=goNow();if(!days.length)return"";
+  const dn=ds=>{const o=Math.round((ds-dayStart(0))/dayMs);return o===0?"Today":o===1?"Tomorrow":new Date(ds).toLocaleDateString([], {weekday:"long"})};
+  return `<div class="panel go">
+    <div class="panel-head"><h2>Go now · next 3 days</h2><button class="reset" id="sharePlan">Send to friends</button></div>
+    ${days.map(d=>{const x=d.top;return `<div class="goday">
+      <div class="goday-top"><div><span class="eyebrow">${dn(d.ds)}</span><h3>${esc(x.sp.n)}</h3>
+        <div class="gowin num">${fmtT(x.w.a)} – ${fmtT(x.w.b)}${x.w.hot?' <span class="star">★</span>':""}</div></div>
+        <div class="badge ${scoreTone(x.M.score)}"><span class="num">${x.M.score}</span><small>${TYPE_LABEL[x.sp.t].toUpperCase()}</small></div></div>
+      <div class="factors">${planReasons(x).map(r=>`<span class="chip">${esc(r)}</span>`).join("")}</div>
+      <div class="small muted">Also good: ${d.alt.map(a=>esc(a.sp.n)).join(", ")}${d.mine&&d.mine!==x?` · Your beach: ${fmtT(d.mine.w.a)} (${d.mine.M.score})`:""}</div>
+      <button class="reset" data-plan="${x.sp.id}|${d.off}">Open this plan</button>
+    </div>`}).join("")}
+    <p class="src">Ranks all 26 beaches by tide, light, moon, season, and each beach's own waves and wind.</p>
+  </div>`}
+function planText(){
+  const days=goNow();
+  return "SoCal Shore Caster plan\n"+days.map(d=>{const x=d.top;
+    return `${new Date(d.ds).toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}: ${x.sp.n}, ${fmtT(x.w.a)}–${fmtT(x.w.b)}. ${planReasons(x).join(", ")}.`}).join("\n")+
+    (location.protocol.startsWith("http")?"\n"+location.origin+location.pathname:"")}
+async function sharePlan(){const text=planText(),btn=$("#sharePlan");
+  try{if(navigator.share){await navigator.share({title:"Fishing plan",text});return}
+    await navigator.clipboard.writeText(text);btn.textContent="Copied. Paste it in your group chat"}
+  catch(e){if(e&&e.name==="AbortError")return;btn.textContent="Couldn't share. Try again"}}
+
+function windHTML(M){const wd=M.wd;
+  if(!wd)return `<div class="panel"><h2>Wind</h2><p class="small muted">Wind forecast unavailable right now. It loads when you have a connection.</p></div>`;
+  const hrs=wd.hrs.filter(h=>h.t>=M.ds+5*3600e3&&h.t<=M.ds+20*3600e3),max=Math.max(20,...hrs.map(h=>h.gust||h.mph));
+  const amTone=windTone(wd.am);
+  return `<div class="panel">
+    <div class="panel-head"><h2>Wind</h2><span class="chip ${amTone}">${wd.am<=8?"Calm morning":wd.am<=14?"Breezy morning":"Windy morning"}</span></div>
+    <p class="small">Morning <b class="num">${Math.round(wd.am)} mph</b> ${wd.amRel||""} · afternoon up to <b class="num">${Math.round(wd.pm.mph)} mph</b> ${compass(wd.pm.dir)} (${wd.pm.rel}).
+      ${wd.calmUntil?`<b>Fish before ${fmtT(wd.calmUntil)}</b>, when it picks up past 12 mph.`:"Light wind all day."}</p>
+    <div class="windbars" role="img" aria-label="Hourly wind speed">${hrs.map(h=>`<div class="wb"><span class="num">${Math.round(h.mph)}</span>
+      <i style="height:${Math.round(6+h.mph/max*46)}px;background:var(--${windTone(h.mph)})"></i>
+      <svg viewBox="0 0 10 10" width="10" height="10" style="transform:rotate(${(h.dir+180)%360}deg)" aria-hidden="true"><path d="M5 0L9 9L5 7L1 9Z" fill="currentColor"/></svg>
+      <span class="lbl">${fmtShort(h.t)}</span></div>`).join("")}</div>
+    <p class="src">Arrows point where the wind blows. ${M.R.t==="surf"?"Onshore wind over 10 mph makes surf casting rough and muddies the water.":M.R.t==="pier"?"Strong wind bows your line. Fish the downwind side of the pier.":"Offshore wind flattens the jetty face. Onshore wind pushes spray over the rocks."}</p>
+  </div>`}
+
+function waterHTML(M){const R=M.R,rain=rainPast(wxFor(R),Math.min(Date.now(),M.ds+12*3600e3)),known=WQ[R.id],link=WQ_LINK[R.r];
+  const items=[];let tone="good",head="No known issues";
+  if(rain&&rain.inches>=0.1){const until=rain.last+72*3600e3;tone="bad";head="Rain advisory";
+    items.push(`${rain.inches.toFixed(2)}" of rain in the last 3 days. County health departments say to avoid water contact for 72 hours after rain${until>Date.now()?`, until about <b>${new Date(until).toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"})}</b>`:""}.`)}
+  if(known){if(known.level==="bad")tone="bad";else if(tone==="good")tone="warn";if(head==="No known issues")head=known.level==="bad"?"Frequent closures":"Watch water quality";items.push(esc(known.text))}
+  if(DDT.has(R.id)){if(tone==="good")tone="warn";if(head==="No known issues")head="Fish advisory";
+    items.push(`Fish consumption advisory: don't eat white croaker from this area (DDT/PCBs). Check <a href="https://oehha.ca.gov/fish/advisories" target="_blank" rel="noopener">OEHHA advisories</a> before keeping other fish.`)}
+  if(!items.length)items.push(rain?"No significant rain in the last 3 days and no history of problems here.":"No history of problems here. Rain data loads when you have a connection.");
+  return `<div class="panel">
+    <div class="panel-head"><h2>Water quality</h2><span class="chip ${tone}">${head}</span></div>
+    ${items.map(t=>`<p class="small">${t}</p>`).join("")}
+    <div class="links"><a href="${link[1]}" target="_blank" rel="noopener">Today's official grades: ${link[0]}</a></div>
+  </div>`}
+
 function renderToday(){
   const M=dayModel(),{a,illum,c,R}=M;
   const now=Date.now();let tideNow="";
@@ -592,6 +765,7 @@ function renderToday(){
   const bt=bestBait(S.baitType,M.month,c);
   const p=M.parts;
   $("#v-today").innerHTML=`
+  ${goNowHTML()}
   <div class="panel">
     <div class="score">
       <div class="dial"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="var(--line)" stroke-width="9"/>
@@ -599,10 +773,11 @@ function renderToday(){
         <div class="v num">${M.score}<small>OF 100</small></div></div>
       <div><div class="eyebrow">${esc(R.n)} · ${TYPE_LABEL[R.t]}</div><div class="verdict">${verdict(M.score)}</div>
         <div class="factors">
-          <span class="chip ${p.moonPts>=17?"good":p.moonPts>=9?"warn":"bad"}">Moon ${p.moonPts}/25</span>
+          <span class="chip ${p.moonPts>=14?"good":p.moonPts>=7?"warn":"bad"}">Moon ${p.moonPts}/20</span>
           <span class="chip ${p.tideNearLight?"good":"warn"}">Tide ${p.tidePts}/25</span>
           <span class="chip ${p.seasonPts>=18?"good":p.seasonPts>=11?"warn":"bad"}">Season ${p.seasonPts}/25</span>
-          <span class="chip ${p.wavePts>=20?"good":p.wavePts>=12?"warn":"bad"}">Surf ${p.wavePts}/25</span>
+          <span class="chip ${p.wavePts>=12?"good":p.wavePts>=7?"warn":"bad"}">Surf ${p.wavePts}/15</span>
+          <span class="chip ${p.windPts>=12?"good":p.windPts>=7?"warn":"bad"}">Wind ${p.windPts}/15</span>
         </div></div>
     </div>
   </div>
@@ -649,6 +824,9 @@ function renderToday(){
       <a href="https://www.surfline.com/surf-reports-forecasts-cams/united-states/california/5332921" target="_blank" rel="noopener">Surfline</a></div>
   </div>
 
+  ${windHTML(M)}
+  ${waterHTML(M)}
+
   <div class="panel">
     <div class="panel-head"><h2>What's biting</h2><span class="small muted">at ${esc(R.n)} · ${c.temp}°F water</span></div>
     <div class="bitelist">${topSp.map(x=>`<div class="bite"><div><b>${x.sp.name}</b><div class="small muted">${x.s>=2.5?"Hot right now":x.s>=1.5?"Biting":x.s>0?"Slow":"Out of season"}</div></div>
@@ -676,6 +854,7 @@ function renderToday(){
   </div>`;
   ["hs","per","temp"].forEach(id=>$("#"+id).addEventListener("change",saveCond));
   $("#resetCond")?.addEventListener("click",()=>{delete S.ovr[ovrKey()];store.set("ovr",S.ovr);render()});
+  $("#sharePlan")?.addEventListener("click",sharePlan);
 }
 function timeAgo(t){const m=Math.round((Date.now()-t)/6e4);return m<60?`${m} min ago`:m<1440?`${Math.round(m/60)} hr ago`:`${Math.round(m/1440)} days ago`}
 function saveCond(){const v=id=>parseFloat($("#"+id).value);
@@ -715,7 +894,8 @@ function renderBait(){
 /* ================= SPOTS ================= */
 function spotScore(sp,M){const c=cond(sp),wi=waveInfo(c.hs,c.per);
   const s=sp.sp.map(id=>speciesScore(SPECIES.find(x=>x.id===id),M.month,sp.t,c)).sort((x,y)=>y-x).slice(0,3);
-  let v=s.reduce((a,b)=>a+b,0)/9.5*70+M.parts.moonPts/25*10+M.parts.tidePts/25*10;
+  const wd=windDay(wxFor(sp),M.ds,sp.face);
+  let v=s.reduce((a,b)=>a+b,0)/9.5*62+M.parts.moonPts/20*10+M.parts.tidePts/25*10+(wd&&wd.am!=null?(wd.am<=8?8:wd.am<=14?3:-6):4);
   const cs=wi[sp.t][1];
   v+=cs==="good"?10:cs==="warn"?2:-25;
   return Math.max(5,Math.min(99,Math.round(v)))}
@@ -745,15 +925,130 @@ function renderSpots(){
 function renderFish(){
   const M=dayModel();
   const list=SPECIES.map(sp=>({sp,s:speciesScore(sp,M.month,null,M.c)})).sort((a,b)=>b.s-a.s);
-  $("#v-fish").innerHTML=`<p class="small muted">Sorted by how well each is biting this month. Highlighted box = current month.</p>`+
-  list.map(({sp,s})=>`<div class="panel">
+  const keep=S.keep||{sp:"halibut",len:""};
+  $("#v-fish").innerHTML=`<div class="panel">
+    <h2>Can I keep it?</h2>
+    <div class="inputs" style="grid-template-columns:2fr 1fr">
+      <label for="keepSp">Species<select id="keepSp">${SPECIES.map(sp=>`<option value="${sp.id}"${sp.id===keep.sp?" selected":""}>${sp.name}</option>`).join("")}</select></label>
+      <label for="keepLen">Length (in)<input id="keepLen" type="number" inputmode="decimal" min="0" max="80" step="0.25" value="${keep.len}" placeholder="0"></label>
+    </div>
+    <div id="keepOut">${keepVerdict(keep.sp,keep.len)}</div>
+    <p class="src">Measure total length: nose to tip of tail, mouth closed, tail lobes pinched together. Lay the fish flat on the tape.</p>
+  </div>
+  <p class="small muted">Sorted by how well each is biting this month. Highlighted box = current month.</p>`+
+  list.map(({sp,s})=>{const f=FISHID[sp.id];return `<div class="panel">
     <div class="panel-head"><h2>${sp.name}</h2><div class="bars">${[1,2,3].map(i=>`<i class="${s>=i-0.25?"on":""}"></i>`).join("")}</div></div>
-    <div class="factors">${sp.types.map(t=>`<span class="chip type">${TYPE_LABEL[t]}</span>`).join("")}${sp.night?'<span class="chip">Night bite</span>':""}</div>
+    <figure class="photo" data-wiki="${f.wiki}"><span class="small muted">Loading photo…</span></figure>
+    <div class="factors">${sp.types.map(t=>`<span class="chip type">${TYPE_LABEL[t]}</span>`).join("")}${sp.night?'<span class="chip">Night bite</span>':""}${f.min?`<span class="chip warn">${f.min}" minimum</span>`:""}</div>
+    <p class="small"><b>How to ID:</b> ${esc(f.id)}</p>
+    <p class="small"><b>Don't confuse with:</b> ${esc(f.look)}</p>
     <div class="months" aria-label="Season by month">${sp.m.map((v,i)=>`<span class="l${v} ${i===M.month?"cur":""}">${MONTHS[i]}</span>`).join("")}</div>
     <p class="small"><b>Bait:</b> ${sp.baits.join(", ")}${sp.lures.length?`<br><b>Lures:</b> ${sp.lures.join(", ")}`:""}</p>
     <p class="small muted">${esc(sp.where)}</p>
     <p class="small"><b>Limit:</b> ${esc(sp.limit)}</p>
-  </div>`).join("")+`<p class="note">Limits change. Confirm current rules in the <a href="https://wildlife.ca.gov/Fishing/Ocean/Regulations/Sport-Fishing" target="_blank" rel="noopener">CDFW ocean sport fishing regulations</a>. A license is required everywhere except public piers.</p>`;
+  </div>`}).join("")+`<p class="note">Limits change. Confirm current rules in the <a href="https://wildlife.ca.gov/Fishing/Ocean/Regulations/Sport-Fishing" target="_blank" rel="noopener">CDFW ocean sport fishing regulations</a>. A license is required everywhere except public piers.</p>`;
+  const upd=()=>{S.keep={sp:$("#keepSp").value,len:$("#keepLen").value};$("#keepOut").innerHTML=keepVerdict(S.keep.sp,S.keep.len)};
+  $("#keepSp").addEventListener("change",upd);$("#keepLen").addEventListener("input",upd);
+  document.querySelectorAll(".photo[data-wiki]").forEach(loadPhoto);
+}
+function keepVerdict(id,len){const sp=SPECIES.find(s=>s.id===id),f=FISHID[id],L=parseFloat(len);
+  if(!f.min)return `<p class="verdict-line good">✓ No minimum size for ${sp.name}.</p><p class="small muted">${esc(sp.limit)}</p>`;
+  if(isNaN(L))return `<p class="small">Minimum size: <b>${f.min}"</b>. Enter the length to check.</p><p class="small muted">${esc(sp.limit)}</p>`;
+  return L>=f.min?`<p class="verdict-line good">✓ Legal to keep (${L}" ≥ ${f.min}")</p><p class="small muted">Bag limit: ${esc(sp.limit)}</p>`
+    :`<p class="verdict-line bad">✗ Too short. Release it (${(f.min-L).toFixed(2).replace(/\.?0+$/,"")}" under the ${f.min}" minimum)</p><p class="small muted">Wet your hands, keep it in the water if you can, and release quickly.</p>`}
+async function loadPhoto(fig){const t=fig.dataset.wiki;
+  try{const j=await getJSON(`https://en.wikipedia.org/api/rest_v1/page/summary/${t}`,"wiki:"+t,30*dayMs);
+    const src=j.data.thumbnail?.source;if(!src)throw new Error("none");
+    fig.innerHTML=`<img src="${src}" alt="${esc(j.data.title)}" loading="lazy"><figcaption class="src">Photo: <a href="${j.data.content_urls?.desktop?.page||"#"}" target="_blank" rel="noopener">Wikipedia</a></figcaption>`}
+  catch(e){fig.innerHTML=`<a class="small" href="https://en.wikipedia.org/wiki/${t}" target="_blank" rel="noopener">See photos on Wikipedia</a>`}}
+
+/* ================= TRIP: checklist, calendar, hot spots ================= */
+const GEAR={all:["Fishing license (not needed on public piers)","Rod & reel","Hooks, sinkers, swivels, leader","Bait / lures","Pliers & line cutter","Measuring tape","Cooler or bucket with ice","Rag or towel","Water & snacks","Sunscreen & hat","Headlamp (dawn/dusk)","Phone charged"],
+  surf:["Sand spike rod holder","Sand crab rake","Waders or wet shorts","Pyramid sinkers 1–3 oz","Tackle pouch (hands free)"],
+  pier:["Pier net or treble-hook gaff","Bait knife & cutting board","Sabiki rigs","Bucket with rope","Light jacket (windy at the end)"],
+  jetty:["Grippy shoes or cleats","Long-handled net","Extra jigheads (you'll snag)","Small backpack (hands free)","Spare leader material"]};
+function nthWeekday(y,m,wd,after){const d=new Date(y,m,after+1);while(d.getDay()!==wd)d.setDate(d.getDate()+1);return d}
+let CAL=null;
+function calendarEvents(){const k=dayStart(0);if(CAL&&CAL.k===k)return CAL.ev;const ev=calendarBuild();CAL={k,ev};return ev}
+function calendarBuild(){const ev=[],now=dayStart(0),end=now+365*dayMs;
+  [new Date(now).getFullYear(),new Date(now).getFullYear()+1].forEach(y=>{
+    const wedOct=nthWeekday(y,9,3,0);ev.push({t:new Date(y,9,wedOct.getDate()-4,6).getTime(),title:"Lobster season opens, 6 AM",note:"Hoop nets allowed from some piers. Lobster report card required.",kind:"season"});
+    ev.push({t:nthWeekday(y,2,3,15).getTime(),title:"Lobster season closes",note:"Last day is the first Wednesday after March 15.",kind:"season"});
+    ev.push({t:new Date(y,2,15).getTime(),title:"White seabass: 1-fish limit starts",note:"Through June 15 south of Pt. Conception.",kind:"rule"});
+    ev.push({t:new Date(y,5,16).getTime(),title:"White seabass: 3-fish limit returns",note:"",kind:"rule"});
+    ev.push({t:new Date(y,3,1).getTime(),title:"Grunion: look-only season (Apr–May)",note:"You can watch runs but not take grunion in April and May.",kind:"rule"});
+    ev.push({t:nthWeekday(y,6,6,0).getTime(),title:"Free Fishing Day (usually)",note:"No license needed. Confirm the date with CDFW.",kind:"free"});
+    const labor=nthWeekday(y,8,1,0);ev.push({t:new Date(y,8,labor.getDate()-2).getTime(),title:"Free Fishing Day (usually)",note:"Saturday of Labor Day weekend. Confirm with CDFW.",kind:"free"});
+  });
+  // new and full moons, and predicted grunion runs (nights 1–4 after each, Mar–Aug)
+  let prev=moonIllum(new Date(now-dayMs+12*3600e3)).phase;
+  for(let t=now;t<end;t+=dayMs){const d=new Date(t),noon=new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime(),p=moonIllum(new Date(noon)).phase;
+    const isNew=prev>0.9&&p<0.1,isFull=prev<0.5&&p>=0.5;prev=p;
+    if(!isNew&&!isFull)continue;
+    for(let k=1;k<=4;k++){const nd=new Date(d.getFullYear(),d.getMonth(),d.getDate()+k).getTime(),m=new Date(nd).getMonth();
+      if(m<2||m>7)continue;const a=astro(nd,33.6,-117.9),hi=tideEvents(a.transits).find(e=>e.type==="High"&&e.t>nd+19*3600e3&&e.t<nd+27*3600e3);
+      if(!hi)continue;ev.push({t:nd+18*3600e3,title:`Grunion run (predicted)${m>=3&&m<=4?" · look only":""}`,note:`About ${fmtT(hi.t)}–${fmtT(hi.t+2*3600e3)}, just after the night high tide. Sandy beaches like Bolsa Chica, Huntington, Cabrillo.`,kind:"grunion"})}}
+  return ev.filter(e=>e.t>=now-dayMs/2&&e.t<end).sort((a,b)=>a.t-b.t)}
+const haversine=(a,b,c,d)=>{const r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 7918*Math.asin(Math.sqrt(x))};
+const nearestSpot=(lat,lng)=>SPOTS.reduce((b,s)=>{const d=haversine(lat,lng,s.lat,s.lng);return d<b.d?{s,d}:b},{s:null,d:1e9});
+
+function renderTrip(){
+  const type=beach().t,checked=store.get("gear:"+type,{}),items=[...GEAR.all,...GEAR[type]];
+  const done=items.filter(i=>checked[i]).length,cal=calendarEvents(),pins=store.get("pins",[]);
+  const now=Date.now(),opens=cal.find(e=>/Lobster season opens/.test(e.title)),closes=cal.find(e=>/Lobster season closes/.test(e.title));
+  const lobster=closes&&(!opens||closes.t<opens.t)?`Lobster season is open until ${new Date(closes.t).toLocaleDateString([], {month:"short",day:"numeric"})}.`:opens?`Lobster season opens ${new Date(opens.t).toLocaleDateString([], {month:"short",day:"numeric"})}.`:"";
+  const kindTone={season:"good",rule:"warn",free:"good",moon:"",grunion:"good"};
+  $("#v-trip").innerHTML=`
+  <div class="panel">
+    <div class="panel-head"><h2>Gear checklist</h2><span class="chip type">${TYPE_LABEL[type]}</span></div>
+    <p class="small muted">${done} of ${items.length} packed for ${esc(beach().n)}.</p>
+    <div class="checks">${items.map((it,i)=>`<label class="check"><input type="checkbox" id="g${i}" data-gear="${esc(it)}"${checked[it]?" checked":""}><span>${esc(it)}</span></label>`).join("")}</div>
+    <button class="reset" id="gearReset">Uncheck all</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Hot spots</h2><span class="small muted">${pins.length} saved</span></div>
+    <p class="small muted">Save the exact trough, hole or rock pile that produced. Pins are saved on this phone; use Share to send one to friends.</p>
+    <div class="pinform">
+      <input id="pinNote" type="text" maxlength="80" placeholder="Note, e.g. Deep trough 50 yds N of tower 12">
+      <div class="links"><button class="reset" id="pinHere">Pin my location</button><button class="reset" id="pinBeach">Pin at ${esc(beach().n)}</button></div>
+      <p class="small" id="pinMsg" role="status"></p>
+    </div>
+    <div class="pins">${pins.map(p=>{const n=nearestSpot(p.lat,p.lng);return `<div class="pin">
+      <div><b>${esc(p.note||"Hot spot")}</b><div class="small muted">${n.s?`${n.d<0.3?"At":`${n.d.toFixed(1)} mi from`} ${esc(n.s.n)}`:""} · ${new Date(p.at).toLocaleDateString([], {month:"short",day:"numeric"})}</div></div>
+      <div class="links"><a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener">Map</a>
+        <button class="reset" data-sharepin="${p.id}">Share</button><button class="reset" data-delpin="${p.id}">Delete</button></div></div>`}).join("")}</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Fishing calendar</h2><span class="small muted">Next 12 months</span></div>
+    ${lobster?`<p class="note">${lobster}</p>`:""}
+    <div class="cal">${cal.slice(0,S.calAll?cal.length:12).map(e=>`<div class="calrow">
+      <div class="caldate num">${new Date(e.t).toLocaleDateString([], {month:"short",day:"numeric"})}<small>${new Date(e.t).toLocaleDateString([], {weekday:"short"})}</small></div>
+      <div><b>${esc(e.title)}</b>${e.kind==="grunion"||e.kind==="season"||e.kind==="free"?` <span class="chip ${kindTone[e.kind]}">${e.kind==="grunion"?"Grunion":e.kind==="free"?"Free":"Season"}</span>`:""}<div class="small muted">${esc(e.note)}</div></div></div>`).join("")}</div>
+    ${cal.length>12?`<button class="reset" id="calMore">${S.calAll?"Show less":`Show all ${cal.length} events`}</button>`:""}
+    <p class="src">Grunion runs are predicted from the moon and tides. Confirm on the <a href="https://wildlife.ca.gov/Conservation/Marine/Grunion" target="_blank" rel="noopener">CDFW grunion schedule</a>.</p>
+  </div>`;
+  document.querySelectorAll("[data-gear]").forEach(cb=>cb.addEventListener("change",()=>{const c=store.get("gear:"+type,{});
+    if(cb.checked)c[cb.dataset.gear]=1;else delete c[cb.dataset.gear];store.set("gear:"+type,c);renderTrip()}));
+  $("#gearReset").addEventListener("click",()=>{store.set("gear:"+type,{});renderTrip()});
+  $("#calMore")?.addEventListener("click",()=>{S.calAll=!S.calAll;renderTrip()});
+  const addPin=(lat,lng)=>{const p=store.get("pins",[]);p.unshift({id:Date.now().toString(36),lat:+lat.toFixed(6),lng:+lng.toFixed(6),note:$("#pinNote").value.trim(),at:Date.now()});store.set("pins",p);renderTrip()};
+  $("#pinBeach").addEventListener("click",()=>addPin(beach().lat,beach().lng));
+  $("#pinHere").addEventListener("click",()=>{const msg=$("#pinMsg");
+    if(!navigator.geolocation){msg.textContent="This browser can't share your location. Use “Pin at beach” instead.";return}
+    msg.textContent="Finding your location…";
+    navigator.geolocation.getCurrentPosition(pos=>addPin(pos.coords.latitude,pos.coords.longitude),
+      err=>{msg.textContent=err.code===1?"Location is blocked. Allow location for this site in your browser settings, then try again.":"Couldn't get a GPS fix. Step away from buildings and try again."},
+      {enableHighAccuracy:true,timeout:15000})});
+  document.querySelectorAll("[data-delpin]").forEach(b=>b.addEventListener("click",()=>{
+    if(b.dataset.armed){store.set("pins",store.get("pins",[]).filter(p=>p.id!==b.dataset.delpin));renderTrip()}
+    else{b.dataset.armed=1;b.textContent="Tap again to delete"}}));
+  document.querySelectorAll("[data-sharepin]").forEach(b=>b.addEventListener("click",async()=>{
+    const p=store.get("pins",[]).find(x=>x.id===b.dataset.sharepin);if(!p)return;
+    const text=`${p.note||"Fishing hot spot"}: https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+    try{if(navigator.share){await navigator.share({title:"Fishing hot spot",text});return}await navigator.clipboard.writeText(text);b.textContent="Copied"}
+    catch(e){if(e&&e.name!=="AbortError")b.textContent="Couldn't share"}}));
 }
 
 /* ================= SHELL ================= */
@@ -763,7 +1058,7 @@ function render(){
   $("#prev").disabled=S.offset<=-7;$("#next").disabled=S.offset>=30;
   $("#beach").value=beach().id;
   ensureData();renderStatus();
-  ({today:renderToday,spots:renderSpots,bait:renderBait,fish:renderFish})[S.tab]();
+  ({today:renderToday,spots:renderSpots,bait:renderBait,fish:renderFish,trip:renderTrip})[S.tab]();
 }
 $("#refresh").addEventListener("click",()=>ensureData(true));
 window.addEventListener("online",()=>ensureData(true));
@@ -780,12 +1075,13 @@ function setBeach(id){S.beach=id;store.set("beach",id);S.baitType=beach().t;stor
 $("#beach").addEventListener("change",e=>setBeach(e.target.value));
 document.addEventListener("click",e=>{
   const bb=e.target.closest("[data-beach]");if(bb){setBeach(bb.dataset.beach);go("today");return}
+  const pl=e.target.closest("[data-plan]");if(pl){const [id,off]=pl.dataset.plan.split("|");S.offset=+off;setBeach(id);window.scrollTo(0,0);return}
   const bt=e.target.closest("[data-bt]");if(bt){S.baitType=bt.dataset.bt;store.set("baitType",S.baitType);render();return}
   const st=e.target.closest("[data-st]");if(st){S.spotType=st.dataset.st;render();return}
   const fd=e.target.closest("[data-day]");if(fd){S.offset=+fd.dataset.day;render();return}
   const g=e.target.closest("[data-go]");if(g){e.preventDefault();go(g.dataset.go)}});
 const h=(location.hash||"").slice(1);
-go(["today","spots","bait","fish"].includes(h)?h:"today");
+go(["today","spots","bait","fish","trip"].includes(h)?h:"today");
 setInterval(()=>{if(S.tab==="today"&&S.offset===0&&!document.activeElement?.matches("input"))render()},5*6e4);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
 </script>
