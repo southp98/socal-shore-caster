@@ -197,13 +197,7 @@ footer{font-size:.75rem;color:var(--muted);text-align:center;padding-block:4px 1
 <header class="top">
   <div class="brand">
     <h1>SoCal <span>Shore</span> Caster</h1>
-    <select id="region" aria-label="Region">
-      <option value="all">All SoCal</option>
-      <option value="sb">Santa Barbara / Ventura</option>
-      <option value="la">Los Angeles</option>
-      <option value="oc">Orange County</option>
-      <option value="sd">San Diego</option>
-    </select>
+    <select id="beach" aria-label="Beach"></select>
   </div>
   <div class="datebar">
     <button id="prev" aria-label="Previous day">‹</button>
@@ -403,12 +397,22 @@ const SPOTS=[
  {n:"Ocean Beach Pier",r:"sd",t:"pier",lat:32.7490,lng:-117.2560,sp:["mack","bonito","halibut","perch","bass"],tip:"Reaches kelp and deep water. Bonito and the odd yellowtail in warm years.",info:"Check status first — the pier has had long closures for repairs."},
  {n:"Imperial Beach Pier",r:"sd",t:"pier",lat:32.5797,lng:-117.1336,sp:["perch","yfc","halibut","shark"],tip:"Good perch and croaker. Water quality closures are common here.",info:"Check San Diego County beach water quality before you go."}
 ];
+/* Nearest NOAA tide prediction station and (where one is close) NOAA water thermometer, in SPOTS order */
+const STN={"9411340":"Santa Barbara","9411189":"Ventura","9411065":"Port Hueneme","9410840":"Santa Monica Pier","9410777":"El Segundo",
+  "9410738":"King Harbor","9410650":"Cabrillo Beach","9410680":"Long Beach","9410599":"Santa Ana River Entrance","9410583":"Balboa Pier",
+  "9410580":"Newport Bay Entrance","TWC0419":"San Clemente","9410230":"La Jolla","9410120":"Imperial Beach"};
+const GAUGE={"9410840":"Santa Monica","9410230":"La Jolla"};
+[["9411340"],["9411340"],["9411189"],["9411189"],["9411065"],["9410840","9410840"],["9410840","9410840"],["9410840","9410840"],
+ ["9410777","9410840"],["9410738"],["9410650"],["9410680"],["9410680"],["9410583"],["9410583"],["9410583"],["9410580"],
+ ["TWC0419"],["TWC0419"],["TWC0419"],["TWC0419"],["9410230","9410230"],["9410230","9410230"],["9410230","9410230"],["9410230","9410230"],["9410120"]]
+ .forEach(([t,g],i)=>{const s=SPOTS[i];s.i=i;s.id=s.n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+   s.tide={id:t,name:STN[t]};s.temp=g?{id:g,name:GAUGE[g]}:null});
 const TYPE_LABEL={surf:"Surf",pier:"Pier",jetty:"Jetty"};
 
 /* ================= STATE ================= */
 const store={get(k,d){try{const v=localStorage.getItem("scc:"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
   set(k,v){try{localStorage.setItem("scc:"+k,JSON.stringify(v))}catch(e){}}};
-const S={offset:0,region:store.get("region","all"),tab:"today",
+const S={offset:0,beach:store.get("beach","huntington-beach-pier"),tab:"today",
   ovr:store.get("ovr",{}),baitType:store.get("baitType","surf"),spotType:"all"};
 const DEFAULT_COND={hs:3,per:12,temp:64,src:"example"};
 
@@ -419,8 +423,9 @@ const pad=n=>String(n).padStart(2,"0");
 const ymdLocal=ts=>{const d=new Date(ts);return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())};
 const ymdUTC=ts=>new Date(ts).toISOString().slice(0,10).replace(/-/g,"");
 const gmt=s=>Date.parse(s.replace(" ","T")+(s.length<=16?":00Z":"Z"));
-const tideKey=()=>REGIONS[S.region].tide.id+":"+ymdLocal(dayStart());
-const ovrKey=()=>S.region+"|"+ymdLocal(dayStart());
+const beach=()=>SPOTS.find(s=>s.id===S.beach)||SPOTS[14];
+const tideKey=()=>beach().tide.id+":"+ymdLocal(dayStart());
+const ovrKey=()=>beach().id+"|"+ymdLocal(dayStart());
 
 async function getJSON(url,key,maxAge,force){
   const cached=store.get("c:"+key,null);
@@ -437,10 +442,13 @@ async function loadTides(R,ds,force){
 async function loadTemp(R,force){
   const j=await getJSON(NOAA+`product=water_temperature&date=latest&station=${R.temp.id}`,"temp:"+R.temp.id,20*6e4,force);
   const d=j.data.data[0];return{...j,v:+d.v,t:gmt(d.t)}}
-async function loadSea(R,key,force){
-  const j=await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${R.sea[0]}&longitude=${R.sea[1]}&hourly=wave_height,wave_period,wave_direction,swell_wave_height,swell_wave_period,sea_surface_temperature&past_days=1&forecast_days=7&length_unit=imperial&timezone=GMT`,
-    "sea:"+key,60*6e4,force);
-  const h=j.data.hourly;return{...j,h,times:h.time.map(t=>Date.parse(t+":00Z"))}}
+/* one request returns the wave forecast at every beach */
+async function loadSea(force){
+  const j=await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${SPOTS.map(s=>s.lat).join(",")}&longitude=${SPOTS.map(s=>s.lng).join(",")}&hourly=wave_height,wave_period,wave_direction,swell_wave_height,swell_wave_period,sea_surface_temperature&past_days=1&forecast_days=7&length_unit=imperial&timezone=GMT`,
+    "sea:all",60*6e4,force);
+  const arr=Array.isArray(j.data)?j.data:[j.data];
+  return{...j,spots:arr.map(d=>({h:d.hourly,times:d.hourly.time.map(t=>Date.parse(t+":00Z"))}))}}
+const seaFor=s=>LIVE.sea.all?.spots[s.i]||null;
 
 function seaDay(sea,ds){if(!sea)return null;let best=-1,temps=[];
   sea.times.forEach((t,i)=>{if(t>=ds+5*3600e3&&t<=ds+19*3600e3){const hs=sea.h.wave_height[i];
@@ -453,17 +461,18 @@ function seaDay(sea,ds){if(!sea)return null;let best=-1,temps=[];
 const compass=d=>d==null?"":["N","NE","E","SE","S","SW","W","NW"][Math.round(d/45)%8];
 
 function ensureData(force){
-  const R=REGIONS[S.region],ds=dayStart(),tk=tideKey(),jobs=[];
+  const R=beach(),ds=dayStart(),tk=tideKey(),jobs=[];
   const run=(id,fn,done)=>{if(inflight.has(id)||(!force&&LIVE.err[id]))return;inflight.add(id);
     jobs.push(fn().then(r=>{done(r);delete LIVE.err[id]}).catch(e=>{LIVE.err[id]=e.message||"Failed"}).finally(()=>inflight.delete(id)))};
   if(force||!LIVE.tides[tk])run("tide:"+tk,()=>loadTides(R,ds,force),r=>LIVE.tides[tk]=r);
   if(R.temp&&(force||!LIVE.temp[R.temp.id]))run("temp:"+R.temp.id,()=>loadTemp(R,force),r=>LIVE.temp[R.temp.id]=r);
-  if(force||!LIVE.sea[S.region])run("sea:"+S.region,()=>loadSea(R,S.region,force),r=>LIVE.sea[S.region]=r);
+  if(force||!LIVE.sea.all)run("sea:all",()=>loadSea(force),r=>LIVE.sea.all=r);
   if(jobs.length){renderStatus();Promise.all(jobs).then(render)}}
 
-function cond(){
-  const o=S.ovr[ovrKey()];if(o)return{...o,src:"you"};
-  const R=REGIONS[S.region],sd=seaDay(LIVE.sea[S.region],dayStart());
+/* conditions at a beach for the selected day: your own numbers > live forecast > example */
+function cond(R=beach()){
+  const o=R===beach()&&S.ovr[ovrKey()];if(o)return{...o,src:"you"};
+  const sd=seaDay(seaFor(R),dayStart());
   if(!sd)return DEFAULT_COND;
   const tl=R.temp&&LIVE.temp[R.temp.id];
   const useNoaa=tl&&S.offset===0&&Date.now()-tl.t<6*3600e3;
@@ -472,7 +481,7 @@ function cond(){
     tempSrc:useNoaa?`NOAA ${R.temp.name} gauge`:sd.sst!=null?"Open-Meteo sea surface":"typical for season",src:"live"}}
 
 function renderStatus(){
-  const el=$("#status"),tk=tideKey(),t=LIVE.tides[tk],sea=LIVE.sea[S.region];
+  const el=$("#status"),tk=tideKey(),t=LIVE.tides[tk],sea=LIVE.sea.all;
   const loading=[...inflight].length>0;
   let cls="",txt;
   if(t&&sea){const stale=!t.fresh||!sea.fresh;cls=stale?"stale":"live";
@@ -497,11 +506,12 @@ function moonSVG(p,f){const r=14,c=16;const lit=p<=0.5;// draw shadow side
   return `<svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${r}" fill="var(--line)"/>
   <path d="M${c} ${c-r} A${r} ${r} 0 0 ${sweepOuter} ${c} ${c+r} A${rx} ${r} 0 0 ${sweepInner} ${c} ${c-r}Z" fill="var(--flare)"/></svg>`}
 
-function waveInfo(hs,per){const H=hs*0.3048,P=0.49*H*H*per;
+/* P = deep-water wave power in kW (= kJ each second) per meter of crest; E = energy one wave carries per meter of beach (P × period) */
+function waveInfo(hs,per){const H=hs*0.3048,P=0.49*H*H*per,E=P*per;
   const surf=hs<1.5?["Flat","good","Clear water — fish dawn/dusk, go light."]:hs<=4?["Ideal","good","Stirred-up sand; perch and croaker feed."]:hs<=6?["Rough","warn","Heavier sinker, short casts. Piers are easier."]:["Unsafe","bad","Skip the surf. Fish protected piers or harbors."];
   const pier=hs<=6?["Fishable","good","Normal conditions."]:hs<=9?["Choppy","warn","Fish the end; expect surge on lines."]:["Closed?","bad","Piers may close in big surf."];
   const jetty=(hs>=5||(hs>=3.5&&per>=15))?["Danger","bad","Waves sweep jetty rocks. Fish the harbor side only."]:hs>=3?["Caution","warn","Stay off wet, low rocks. Watch sets."]:["Fishable","good","Stay on dry, high rocks."];
-  return{P,surf,pier,jetty}}
+  return{P,E,surf,pier,jetty}}
 
 function speciesScore(sp,month,type,c,hour){
   if(type&&!sp.types.includes(type))return 0;
@@ -512,7 +522,7 @@ function speciesScore(sp,month,type,c,hour){
   return Math.max(0,s)}
 
 function dayModel(){
-  const ds=dayStart(),R=REGIONS[S.region],a=astro(ds,R.lat,R.lng);
+  const ds=dayStart(),R=beach(),a=astro(ds,R.lat,R.lng);
   const lt=LIVE.tides[tideKey()],liveTide=!!lt;
   const ev=liveTide?lt.events:tideEvents(a.transits);
   const dayEv=ev.filter(e=>e.t>=ds&&e.t<ds+dayMs);
@@ -532,9 +542,10 @@ function dayModel(){
   const moonPts=Math.round(25*Math.abs(Math.cos(2*Math.PI*illum.phase)));
   const tideNearLight=dayEv.some(e=>[a.sunrise,a.sunset].some(s=>s&&Math.abs(e.t-s)<2.5*3600e3));
   const tidePts=tideNearLight?25:12;
-  const seasonTop=SPECIES.map(sp=>speciesScore(sp,month,null,c)).sort((x,y)=>y-x).slice(0,4).reduce((s,x)=>s+x,0);
-  const seasonPts=Math.round(Math.min(25,seasonTop/12*25));
-  const wavePts=c.hs<1.5?16:c.hs<=4?25:c.hs<=6?14:6;
+  const seasonTop=R.sp.map(id=>speciesScore(SPECIES.find(x=>x.id===id),month,R.t,c)).sort((x,y)=>y-x).slice(0,3).reduce((s,x)=>s+x,0);
+  const seasonPts=Math.round(Math.min(25,seasonTop/9*25));
+  const wr=waveInfo(c.hs,c.per)[R.t][1];
+  const wavePts=R.t==="surf"?(c.hs<1.5?16:c.hs<=4?25:c.hs<=6?14:6):(wr==="good"?25:wr==="warn"?14:6);
   const score=Math.min(100,moonPts+tidePts+seasonPts+wavePts);
   return{ds,R,a,ev,dayEv,liveTide,illum,month,c,W,score,parts:{moonPts,tidePts,seasonPts,wavePts,tideNearLight}}}
 
@@ -574,10 +585,10 @@ function renderToday(){
   else{const sf=Math.abs(Math.cos(2*Math.PI*moonIllum(new Date(M.ds-1.5*dayMs)).phase));
     range=sf>0.75?["Big swing (spring tides)","good"]:sf>0.35?["Moderate swing","warn"]:["Small swing (neap tides)","bad"]}
   const minus=M.liveTide&&M.dayEv.some(e=>e.type==="Low"&&e.v<0);
-  const n0=new Date(),sea=LIVE.sea[S.region],week=sea?[...Array(7)].map((_,i)=>{const d0=new Date(n0.getFullYear(),n0.getMonth(),n0.getDate()+i).getTime();return{i,d0,sd:seaDay(sea,d0)}}).filter(x=>x.sd):[];
+  const n0=new Date(),sea=seaFor(R),week=sea?[...Array(7)].map((_,i)=>{const d0=new Date(n0.getFullYear(),n0.getMonth(),n0.getDate()+i).getTime();return{i,d0,sd:seaDay(sea,d0)}}).filter(x=>x.sd):[];
   const wmax=Math.max(4,...week.map(x=>x.sd.hs));
   const wi=waveInfo(c.hs,c.per);
-  const topSp=SPECIES.map(sp=>({sp,s:speciesScore(sp,M.month,null,c)})).filter(x=>x.s>0).sort((x,y)=>y.s-x.s).slice(0,6);
+  const topSp=R.sp.map(id=>SPECIES.find(x=>x.id===id)).map(sp=>({sp,s:speciesScore(sp,M.month,R.t,c)})).sort((x,y)=>y.s-x.s);
   const bt=bestBait(S.baitType,M.month,c);
   const p=M.parts;
   $("#v-today").innerHTML=`
@@ -586,7 +597,7 @@ function renderToday(){
       <div class="dial"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="var(--line)" stroke-width="9"/>
         <circle cx="48" cy="48" r="40" fill="none" stroke="var(--${scoreTone(M.score)})" stroke-width="9" stroke-linecap="round" stroke-dasharray="${(M.score/100*251.3).toFixed(1)} 251.3" transform="rotate(-90 48 48)"/></svg>
         <div class="v num">${M.score}<small>OF 100</small></div></div>
-      <div><div class="eyebrow">${esc(R.name)} shore outlook</div><div class="verdict">${verdict(M.score)}</div>
+      <div><div class="eyebrow">${esc(R.n)} · ${TYPE_LABEL[R.t]}</div><div class="verdict">${verdict(M.score)}</div>
         <div class="factors">
           <span class="chip ${p.moonPts>=17?"good":p.moonPts>=9?"warn":"bad"}">Moon ${p.moonPts}/25</span>
           <span class="chip ${p.tideNearLight?"good":"warn"}">Tide ${p.tidePts}/25</span>
@@ -624,22 +635,23 @@ function renderToday(){
       <label for="per">Period (s)<input id="per" type="number" inputmode="decimal" min="3" max="25" step="1" value="${c.per}"></label>
       <label for="temp">Water °F<input id="temp" type="number" inputmode="decimal" min="45" max="80" step="1" value="${c.temp}"></label>
     </div>
-    <div class="power"><span class="big num">${wi.P.toFixed(1)}</span><span>kW per meter of wave crest</span></div>
-    <div class="meter" aria-hidden="true"><i style="left:${Math.min(100,wi.P/30*100)}%"></i></div>
+    <div class="power"><span class="big num">${Math.round(wi.E)} kJ</span><span>of energy in each wave, per meter of beach</span></div>
+    <div class="meter" aria-hidden="true"><i style="left:${Math.min(100,wi.E/400*100)}%"></i></div>
+    <p class="src">That's ${wi.P.toFixed(1)} kJ arriving every second along each meter of shoreline. Under 50 kJ is gentle; over 200 kJ is heavy surf.</p>
     <div class="fishability">
       <div><b>Surf</b><span class="chip ${wi.surf[1]}">${wi.surf[0]}</span><p class="small muted" style="margin-top:4px">${wi.surf[2]}</p></div>
       <div><b>Pier</b><span class="chip ${wi.pier[1]}">${wi.pier[0]}</span><p class="small muted" style="margin-top:4px">${wi.pier[2]}</p></div>
       <div><b>Jetty</b><span class="chip ${wi.jetty[1]}">${wi.jetty[0]}</span><p class="small muted" style="margin-top:4px">${wi.jetty[2]}</p></div>
     </div>
     <p class="small muted">Seeing something different at the beach? Type your own numbers above. Check the nearby buoys:</p>
-    <div class="links">${R.buoys.map(b=>`<a href="https://www.ndbc.noaa.gov/station_page.php?station=${b[0]}" target="_blank" rel="noopener">${esc(b[1])} buoy</a>`).join("")}
+    <div class="links">${REGIONS[R.r].buoys.map(b=>`<a href="https://www.ndbc.noaa.gov/station_page.php?station=${b[0]}" target="_blank" rel="noopener">${esc(b[1])} buoy</a>`).join("")}
       <a href="https://cdip.ucsd.edu/m/" target="_blank" rel="noopener">CDIP swell maps</a>
       <a href="https://www.surfline.com/surf-reports-forecasts-cams/united-states/california/5332921" target="_blank" rel="noopener">Surfline</a></div>
   </div>
 
   <div class="panel">
-    <div class="panel-head"><h2>What's biting</h2><span class="small muted">${new Date(M.ds).toLocaleDateString([], {month:"long"})} · ${c.temp}°F water</span></div>
-    <div class="bitelist">${topSp.map(x=>`<div class="bite"><div><b>${x.sp.name}</b><div class="small muted">${x.sp.types.map(t=>TYPE_LABEL[t]).join(" · ")}</div></div>
+    <div class="panel-head"><h2>What's biting</h2><span class="small muted">at ${esc(R.n)} · ${c.temp}°F water</span></div>
+    <div class="bitelist">${topSp.map(x=>`<div class="bite"><div><b>${x.sp.name}</b><div class="small muted">${x.s>=2.5?"Hot right now":x.s>=1.5?"Biting":x.s>0?"Slow":"Out of season"}</div></div>
       <div class="bars" aria-label="Bite strength ${Math.round(x.s)} of 3">${[1,2,3].map(i=>`<i class="${x.s>=i-0.25?"on":""}"></i>`).join("")}</div></div>`).join("")}</div>
     <div class="links"><a href="https://www.pierfishing.com/" target="_blank" rel="noopener">Pier fishing reports</a><a href="https://www.976tuna.com/" target="_blank" rel="noopener">976-TUNA reports</a></div>
   </div>
@@ -701,31 +713,32 @@ function renderBait(){
 }
 
 /* ================= SPOTS ================= */
-function spotScore(sp,M){const c=M.c,wi=waveInfo(c.hs,c.per);
+function spotScore(sp,M){const c=cond(sp),wi=waveInfo(c.hs,c.per);
   const s=sp.sp.map(id=>speciesScore(SPECIES.find(x=>x.id===id),M.month,sp.t,c)).sort((x,y)=>y-x).slice(0,3);
   let v=s.reduce((a,b)=>a+b,0)/9.5*70+M.parts.moonPts/25*10+M.parts.tidePts/25*10;
-  const cond=sp.t==="surf"?wi.surf[1]:sp.t==="pier"?wi.pier[1]:wi.jetty[1];
-  v+=cond==="good"?10:cond==="warn"?2:-25;
+  const cs=wi[sp.t][1];
+  v+=cs==="good"?10:cs==="warn"?2:-25;
   return Math.max(5,Math.min(99,Math.round(v)))}
 function renderSpots(){
   const M=dayModel();
-  const list=SPOTS.filter(s=>(S.region==="all"||s.r===S.region)&&(S.spotType==="all"||s.t===S.spotType))
-    .map(s=>({s,score:spotScore(s,M),biting:s.sp.map(id=>SPECIES.find(x=>x.id===id)).filter(x=>speciesScore(x,M.month,s.t,M.c)>=2)}))
+  const list=SPOTS.filter(s=>S.spotType==="all"||s.t===S.spotType)
+    .map(s=>{const c=cond(s);return{s,c,score:spotScore(s,M),biting:s.sp.map(id=>SPECIES.find(x=>x.id===id)).filter(x=>speciesScore(x,M.month,s.t,c)>=2)}})
     .sort((a,b)=>b.score-a.score);
   $("#v-spots").innerHTML=`
   <div class="seg" role="group" aria-label="Spot type">${["all","surf","pier","jetty"].map(t=>`<button data-st="${t}" aria-pressed="${S.spotType===t}">${t==="all"?"All":TYPE_LABEL[t]}</button>`).join("")}</div>
-  <p class="small muted">${list.length} spots in ${esc(REGIONS[S.region].name)}, ranked for ${new Date(M.ds).toLocaleDateString([], {weekday:"long"})} by season, moon, tide and the surf you entered.</p>
-  ${list.map((x,i)=>`<article class="spot">
+  <p class="small muted">${list.length} beaches ranked for ${new Date(M.ds).toLocaleDateString([], {weekday:"long"})} by season, moon, tide and each beach's own wave forecast.</p>
+  ${list.map((x,i)=>{const mine=x.s.id===beach().id;return `<article class="spot"${mine?' style="border-color:var(--accent)"':""}>
     <div class="spot-top"><div><span class="rankno">#${i+1}</span><h3>${esc(x.s.n)}</h3>
-      <div class="factors"><span class="chip type">${TYPE_LABEL[x.s.t]}</span><span class="chip">${esc(REGIONS[x.s.r].name)}</span></div></div>
+      <div class="factors"><span class="chip type">${TYPE_LABEL[x.s.t]}</span>${x.c.src!=="example"?`<span class="chip">${x.c.hs} ft @ ${x.c.per}s</span><span class="chip">${x.c.temp}°F</span>`:""}</div></div>
       <div class="badge ${scoreTone(x.score)}"><span class="num">${x.score}</span><small>TODAY</small></div></div>
     <p><b>Biting:</b> ${x.biting.length?x.biting.map(b=>b.name).join(", "):"<span class='muted'>Slow season for this spot's main species</span>"}</p>
     <p class="small">${esc(x.s.tip)}</p>
+    <div class="links">${mine?'<span class="chip good">Your beach</span>':`<button class="reset" data-beach="${x.s.id}">Show tides & bait for this beach</button>`}</div>
     <details><summary>Parking, notes & directions</summary>
       <p class="small muted">${esc(x.s.info)}</p>
       <div class="links" style="margin-top:8px"><a href="https://www.google.com/maps/search/?api=1&query=${x.s.lat},${x.s.lng}" target="_blank" rel="noopener">Directions</a>
-      <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=${REGIONS[x.s.r].tide.id}" target="_blank" rel="noopener">NOAA tides</a></div>
-    </details></article>`).join("")}`;
+      <a href="https://tidesandcurrents.noaa.gov/noaatidepredictions.html?id=${x.s.tide.id}" target="_blank" rel="noopener">NOAA tides (${esc(x.s.tide.name)})</a></div>
+    </details></article>`}).join("")}`;
 }
 
 /* ================= FISH ================= */
@@ -748,7 +761,7 @@ function render(){
   const ds=dayStart(),d=new Date(ds);
   $("#dateLabel").innerHTML=`${d.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}<small>${S.offset===0?"Today":S.offset===1?"Tomorrow":S.offset===-1?"Yesterday":(S.offset>0?"In "+S.offset+" days":-S.offset+" days ago")}</small>`;
   $("#prev").disabled=S.offset<=-7;$("#next").disabled=S.offset>=30;
-  $("#region").value=S.region;
+  $("#beach").value=beach().id;
   ensureData();renderStatus();
   ({today:renderToday,spots:renderSpots,bait:renderBait,fish:renderFish})[S.tab]();
 }
@@ -762,8 +775,11 @@ function go(tab){S.tab=tab;document.querySelectorAll(".view").forEach(v=>v.hidde
 document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.tab)));
 $("#prev").addEventListener("click",()=>{S.offset--;render()});
 $("#next").addEventListener("click",()=>{S.offset++;render()});
-$("#region").addEventListener("change",e=>{S.region=e.target.value;store.set("region",S.region);render()});
+$("#beach").innerHTML=["sb","la","oc","sd"].map(r=>`<optgroup label="${REGIONS[r].name}">${SPOTS.filter(s=>s.r===r).map(s=>`<option value="${s.id}">${esc(s.n)}</option>`).join("")}</optgroup>`).join("");
+function setBeach(id){S.beach=id;store.set("beach",id);S.baitType=beach().t;store.set("baitType",S.baitType);render()}
+$("#beach").addEventListener("change",e=>setBeach(e.target.value));
 document.addEventListener("click",e=>{
+  const bb=e.target.closest("[data-beach]");if(bb){setBeach(bb.dataset.beach);go("today");return}
   const bt=e.target.closest("[data-bt]");if(bt){S.baitType=bt.dataset.bt;store.set("baitType",S.baitType);render();return}
   const st=e.target.closest("[data-st]");if(st){S.spotType=st.dataset.st;render();return}
   const fd=e.target.closest("[data-day]");if(fd){S.offset=+fd.dataset.day;render();return}
