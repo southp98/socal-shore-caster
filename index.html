@@ -227,6 +227,13 @@ nav.tabs button{font-size:.74rem!important;letter-spacing:.05em!important}
 .calrow:first-child{border-top:0}
 .caldate{font-size:.85rem;font-weight:500}
 .caldate small{display:block;color:var(--muted);font-size:.7rem}
+.alarmtimes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.alarmtimes div{background:var(--bg);border-radius:10px;padding:10px 6px;text-align:center;display:flex;flex-direction:column;gap:2px;min-width:0}
+.alarmtimes .k{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.alarmtimes .v{font-size:1rem;font-weight:500}
+.alarmtimes .lead{background:var(--accent);color:var(--accent-ink)}
+.alarmtimes .lead .k{color:var(--accent-ink);opacity:.85}
+.alarmtimes .lead .v{font-size:1.15rem}
 </style>
 </head>
 <body>
@@ -745,6 +752,7 @@ function goNowHTML(){
         <div class="gowin num">${fmtT(x.w.a)} – ${fmtT(x.w.b)}${x.w.hot?' <span class="star">★</span>':""}</div></div>
         <div class="badge ${scoreTone(x.M.score)}"><span class="num">${x.M.score}</span><small>${TYPE_LABEL[x.sp.t].toUpperCase()}</small></div></div>
       <div class="factors">${planReasons(x).map(r=>`<span class="chip">${esc(r)}</span>`).join("")}</div>
+      ${ALARM().home?`<div class="small"><b>Leave by ${fmtT(tripTimes(x.sp,x.w.a).leave)}</b> from ${esc(ALARM().home.label)} (~${tripTimes(x.sp,x.w.a).drive} min drive)</div>`:""}
       <div class="small muted">Also good: ${d.alt.map(a=>esc(a.sp.n)).join(", ")}${d.mine&&d.mine!==x?` · Your beach: ${fmtT(d.mine.w.a)} (${d.mine.M.score})`:""}</div>
       <button class="reset" data-plan="${x.sp.id}|${d.off}">Open this plan</button>
     </div>`}).join("")}
@@ -789,6 +797,94 @@ function waterHTML(M){const R=M.R,rain=rainPast(wxFor(R),Math.min(Date.now(),M.d
     <div class="links"><a href="${link[1]}" target="_blank" rel="noopener">Today's official grades: ${link[0]}</a></div>
   </div>`}
 
+/* ================= SUNRISE ALARM ================= */
+const CITIES=[["Los Angeles (DTLA)",34.05,-118.25],["Pasadena",34.15,-118.14],["Glendale",34.14,-118.26],["Burbank",34.18,-118.31],["Van Nuys",34.19,-118.45],
+ ["Santa Clarita",34.39,-118.54],["Lancaster / Palmdale",34.65,-118.14],["Santa Monica",34.02,-118.49],["Torrance",33.84,-118.34],["Long Beach",33.77,-118.19],
+ ["Downey",33.94,-118.13],["Whittier",33.98,-118.03],["West Covina",34.07,-117.94],["Pomona",34.06,-117.75],["Ontario",34.06,-117.65],["San Bernardino",34.11,-117.29],
+ ["Riverside",33.95,-117.40],["Corona",33.88,-117.57],["Temecula",33.49,-117.15],["Fullerton",33.87,-117.92],["Anaheim",33.84,-117.91],["Orange",33.79,-117.85],
+ ["Santa Ana",33.75,-117.87],["Irvine",33.68,-117.83],["Mission Viejo",33.60,-117.67],["Oceanside",33.20,-117.38],["Escondido",33.12,-117.09],["San Diego",32.72,-117.16],
+ ["El Cajon",32.79,-116.96],["Chula Vista",32.64,-117.08],["Thousand Oaks",34.17,-118.84],["Oxnard",34.20,-119.18],["Ventura",34.28,-119.29],["Santa Barbara",34.42,-119.70]];
+const ALARM=()=>({prep:30,buffer:20,home:null,drive:{},...store.get("alarm",{})});
+const setAlarm=patch=>store.set("alarm",{...ALARM(),...patch});
+/* early-morning drive estimate: straight-line distance × road factor at typical pre-dawn speeds */
+function driveEstimate(home,R){const d=haversine(home.lat,home.lng,R.lat,R.lng)*1.3+1;
+  const mph=d<8?26:d<25?38:d<60?50:56;return Math.max(5,Math.round(d/mph*60+4))}
+function tripTimes(R,target){const A=ALARM();if(!A.home)return null;
+  const drive=A.drive[R.id]??driveEstimate(A.home,R),arrive=target-A.buffer*6e4,leave=arrive-drive*6e4,wake=leave-A.prep*6e4;
+  return{drive,auto:A.drive[R.id]==null,arrive,leave,wake}}
+function alarmTargets(M){const seen=new Set();
+  return M.W.filter(w=>w.label!=="Solunar minor"&&w.a>=M.ds+3*3600e3&&w.a<M.ds+21*3600e3&&w.a>Date.now()).filter(w=>{const k=Math.round(w.a/6e4);if(seen.has(k))return false;seen.add(k);return true})}
+/* after today's windows have passed, plan tomorrow morning instead */
+function alarmModel(M){return alarmTargets(M).length||M.off!==0?M:dayModel(M.R,1)}
+function alarmHTML(M0){const A=ALARM(),M=alarmModel(M0),R=M.R,dayName=M.off===M0.off?"":"Tomorrow · ";
+  const cityOpts=`<option value="">Choose your city…</option>${CITIES.map(c=>`<option value="${esc(c[0])}"${A.home&&A.home.label===c[0]?" selected":""}>${esc(c[0])}</option>`).join("")}${A.home&&!CITIES.some(c=>c[0]===A.home.label)?`<option value="__here" selected>${esc(A.home.label)}</option>`:""}`;
+  const where=`<div class="inputs" style="grid-template-columns:1fr">
+      <label for="alarmHome">Leaving from<select id="alarmHome">${cityOpts}</select></label></div>
+    <div class="links"><button class="reset" id="alarmHere">Use my current location</button></div><p class="small" id="alarmMsg" role="status"></p>`;
+  if(!A.home)return `<div class="panel"><div class="panel-head"><h2>Sunrise alarm</h2></div>
+    <p class="small muted">Set where you leave from and the app works out when to wake up and leave for ${esc(R.n)}.</p>${where}</div>`;
+  const targets=alarmTargets(M);
+  if(!targets.length)return `<div class="panel"><div class="panel-head"><h2>Sunrise alarm</h2></div>
+    <p class="small muted">No fishing windows left on this day. Tap › to plan tomorrow.</p>${where}</div>`;
+  const best=bestWindow(M),sel=targets.find(w=>w.a===S.alarmTarget)||targets.find(w=>best&&w.a===best.a)||targets[0];
+  const T=tripTimes(R,sel.a);
+  return `<div class="panel">
+    <div class="panel-head"><h2>Sunrise alarm</h2><span class="chip">${dayName}${esc(R.n)}</span></div>
+    <div class="inputs" style="grid-template-columns:1fr">
+      <label for="alarmTarget">Be fishing for<select id="alarmTarget">${targets.map(w=>`<option value="${w.a}"${w===sel?" selected":""}>${fmtT(w.a)} · ${w.label}${w.hot?" ★":""}</option>`).join("")}</select></label></div>
+    <div class="alarmtimes">
+      <div><span class="k">Wake up</span><span class="v num">${fmtT(T.wake)}</span></div>
+      <div class="lead"><span class="k">Leave by</span><span class="v num">${fmtT(T.leave)}</span></div>
+      <div><span class="k">Arrive</span><span class="v num">${fmtT(T.arrive)}</span></div>
+    </div>
+    <div class="inputs">
+      <label for="alarmDrive">Drive (min)<input id="alarmDrive" type="number" inputmode="numeric" min="1" max="300" value="${T.drive}"></label>
+      <label for="alarmPrep">Get ready<input id="alarmPrep" type="number" inputmode="numeric" min="0" max="120" value="${A.prep}"></label>
+      <label for="alarmBuffer">Park & rig<input id="alarmBuffer" type="number" inputmode="numeric" min="0" max="90" value="${A.buffer}"></label>
+    </div>
+    <p class="src">${T.auto?`Drive time is an early-morning estimate from ${esc(A.home.label)}. Check live traffic and type the real number if it's off.`:`Using your drive time for this beach. <button class="reset" id="alarmAuto">Use estimate</button>`}</p>
+    <div class="links">
+      <button class="reset" id="alarmIcs">Add alarm to calendar</button>
+      <a href="https://www.google.com/maps/dir/?api=1&origin=${A.home.lat},${A.home.lng}&destination=${R.lat},${R.lng}&travelmode=driving" target="_blank" rel="noopener">Live traffic</a>
+    </div>
+    <p class="small" id="alarmMsg" role="status"></p>
+    <details><summary class="small">Change where you leave from</summary>${where.replace('id="alarmMsg"','id="alarmMsg2"')}</details>
+  </div>`}
+function icsTime(t){return new Date(t).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"")}
+function alarmICS(M,w,T){const R=M.R,A=ALARM();
+  const hi=M.dayEv.find(e=>e.type==="High"&&Math.abs(e.t-w.a)<5*3600e3);
+  const desc=`Wake up ${fmtT(T.wake)}. Leave by ${fmtT(T.leave)} (~${T.drive} min drive). Fishing ${fmtT(w.a)}-${fmtT(w.b)} (${w.label}).${hi?` High tide ${fmtT(hi.t)}.`:""} Waves ${M.c.hs} ft @ ${M.c.per}s.`;
+  const esc2=x=>x.replace(/[\\,;]/g,m=>"\\"+m);
+  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SoCal Shore Caster//EN","CALSCALE:GREGORIAN","BEGIN:VEVENT",
+    `UID:${R.id}-${Math.round(w.a)}@shore-caster`,`DTSTAMP:${icsTime(Date.now())}`,`DTSTART:${icsTime(T.leave)}`,`DTEND:${icsTime(w.b)}`,
+    `SUMMARY:${esc2("Fishing: "+R.n)}`,`LOCATION:${esc2(R.n)}`,`GEO:${R.lat};${R.lng}`,`DESCRIPTION:${esc2(desc)}`,
+    "BEGIN:VALARM",`TRIGGER:-PT${A.prep}M`,"ACTION:DISPLAY",`DESCRIPTION:${esc2("Wake up! Fishing at "+R.n)}`,"END:VALARM",
+    "BEGIN:VALARM","TRIGGER:PT0M","ACTION:DISPLAY",`DESCRIPTION:${esc2("Leave now for "+R.n)}`,"END:VALARM",
+    "END:VEVENT","END:VCALENDAR"].join("\r\n")}
+function bindAlarm(M0){const M=alarmModel(M0);
+  const msg=t=>{const el=$("#alarmMsg")||$("#alarmMsg2");if(el)el.textContent=t};
+  const homeSel=e=>{const v=e.target.value,c=CITIES.find(x=>x[0]===v);if(c){setAlarm({home:{label:c[0],lat:c[1],lng:c[2]},drive:{}});renderToday()}};
+  $("#alarmHome")?.addEventListener("change",homeSel);
+  $("#alarmHere")?.addEventListener("click",()=>{
+    if(!navigator.geolocation){msg("This browser can't share your location. Pick your city instead.");return}
+    msg("Finding your location…");
+    navigator.geolocation.getCurrentPosition(pos=>{setAlarm({home:{label:"My location",lat:+pos.coords.latitude.toFixed(4),lng:+pos.coords.longitude.toFixed(4)},drive:{}});renderToday()},
+      err=>msg(err.code===1?"Location is blocked. Pick your city from the list instead.":"Couldn't get your location. Pick your city from the list instead."),{timeout:15000})});
+  $("#alarmTarget")?.addEventListener("change",e=>{S.alarmTarget=+e.target.value;renderToday()});
+  $("#alarmDrive")?.addEventListener("change",e=>{const v=parseInt(e.target.value,10);if(v>0){const A=ALARM();A.drive[M.R.id]=v;setAlarm({drive:A.drive});renderToday()}});
+  $("#alarmAuto")?.addEventListener("click",()=>{const A=ALARM();delete A.drive[M.R.id];setAlarm({drive:A.drive});renderToday()});
+  $("#alarmPrep")?.addEventListener("change",e=>{const v=parseInt(e.target.value,10);if(v>=0){setAlarm({prep:v});renderToday()}});
+  $("#alarmBuffer")?.addEventListener("change",e=>{const v=parseInt(e.target.value,10);if(v>=0){setAlarm({buffer:v});renderToday()}});
+  $("#alarmIcs")?.addEventListener("click",()=>{
+    const targets=alarmTargets(M),best=bestWindow(M),w=targets.find(x=>x.a===S.alarmTarget)||targets.find(x=>best&&x.a===best.a)||targets[0];
+    if(!w)return;const T=tripTimes(M.R,w.a);
+    try{const url=URL.createObjectURL(new Blob([alarmICS(M,w,T)],{type:"text/calendar"}));
+      const a=document.createElement("a");a.href=url;a.download="fishing-"+M.R.id+".ics";document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      msg(`Calendar event created with alerts at ${fmtT(T.wake)} (wake up) and ${fmtT(T.leave)} (leave). Open the downloaded file if your phone doesn't add it right away.`)}
+    catch(e){msg("Couldn't create the calendar file on this device.")}});
+}
+
 function renderToday(){
   const M=dayModel(),{a,illum,c,R}=M;
   const now=Date.now();let tideNow="";
@@ -823,6 +919,8 @@ function renderToday(){
         </div></div>
     </div>
   </div>
+
+  ${alarmHTML(M)}
 
   <div class="panel">
     <div class="panel-head"><h2>Tides</h2><span class="chip ${range[1]}">${range[0]}</span></div>
@@ -897,6 +995,7 @@ function renderToday(){
   ["hs","per","temp"].forEach(id=>$("#"+id).addEventListener("change",saveCond));
   $("#resetCond")?.addEventListener("click",()=>{delete S.ovr[ovrKey()];store.set("ovr",S.ovr);render()});
   $("#sharePlan")?.addEventListener("click",sharePlan);
+  bindAlarm(M);
 }
 function timeAgo(t){const m=Math.round((Date.now()-t)/6e4);return m<60?`${m} min ago`:m<1440?`${Math.round(m/60)} hr ago`:`${Math.round(m/1440)} days ago`}
 function saveCond(){const v=id=>parseFloat($("#"+id).value);

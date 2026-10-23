@@ -1,6 +1,6 @@
 // Offline support: the app shell is cached; NOAA/Open-Meteo calls go to the network
 // (the page keeps its own saved copy of the last data for offline use).
-const CACHE = "shore-caster-v6";
+const CACHE = "shore-caster-v7";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
