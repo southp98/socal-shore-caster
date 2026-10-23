@@ -331,39 +331,39 @@ const REGIONS={
 /* m = monthly bite strength Jan..Dec (0 none, 1 some, 2 good, 3 peak) */
 const SPECIES=[
  {id:"perch",name:"Barred Surfperch",types:["surf","pier"],m:[3,3,3,3,2,1,1,1,1,2,3,3],cold:true,
-  baits:["Sand crabs","Gulp! Camo Sandworm","Ghost shrimp","Mussel"],lures:["Gulp! sandworm on a Carolina rig","1–2\" curly-tail grub (motor oil)"],
+  baits:["Sand crabs","Gulp! Camo Sandworm","Lugworms","Ghost shrimp","Market shrimp","Mussel"],lures:["Gulp! sandworm on a Carolina rig","1–2\" grub on a drop-shot rig","2–3\" soft swimbait (surf)","Lucky Craft Flash Minnow 65/110"],
   rig:"Carolina rig: 1/4–1/2 oz egg sinker → bead → swivel\n18–24\" 6 lb fluoro leader → #4–#6 baitholder hook",
   where:"Troughs and rip edges 10–40 yds out. Look for darker, deeper water between sandbars.",limit:"20 surfperch combined, no more than 10 of one species."},
  {id:"corbina",name:"California Corbina",types:["surf"],m:[0,0,1,1,2,3,3,3,3,2,1,0],warm:true,calm:true,
-  baits:["Sand crabs","Ghost shrimp","Bloodworms"],lures:["Gulp! sandworm drifted in the wash"],
+  baits:["Sand crabs","Ghost shrimp","Bloodworms","Lugworms"],lures:["Gulp! sandworm drifted in the wash","2–3\" soft swimbait (surf)"],
   rig:"Light Carolina rig or a single split-shot\n6–8 lb fluoro → #4–#6 hook, soft-shell crab",
   where:"Right in the wash — often in ankle-deep water. Fish moving tide at dawn; they spook easily.",limit:"No size limit; general bag applies. Release big ones."},
  {id:"yfc",name:"Yellowfin Croaker",types:["surf","pier"],m:[0,0,0,1,2,3,3,3,3,2,1,0],warm:true,
-  baits:["Sand crabs","Bloodworms","Ghost shrimp","Mussel"],lures:["Gulp! Camo Sandworm"],
+  baits:["Sand crabs","Bloodworms","Ghost shrimp","Lugworms","Market shrimp","Mussel"],lures:["Gulp! Camo Sandworm","1–2\" grub on a drop-shot rig"],
   rig:"Carolina rig or high/low rig\n1/2 oz sinker, #4 hooks",where:"Sandy surf and pier bases in summer, best at dusk and into dark.",limit:"General bag; check CDFW."},
  {id:"spotfin",name:"Spotfin Croaker",types:["surf","pier","jetty"],m:[0,0,0,1,2,3,3,3,2,1,0,0],warm:true,night:true,
-  baits:["Ghost shrimp","Bloodworms","Clam","Mussel"],lures:[],
+  baits:["Ghost shrimp","Bloodworms","Clam","Lugworms","Mussel"],lures:[],
   rig:"Fish-finder rig, 1 oz sliding sinker\n#2–#4 hook, 12 lb leader",where:"Harbor mouths, bays and deeper holes; prime at night on incoming tides.",limit:"General bag; check CDFW."},
  {id:"halibut",name:"California Halibut",types:["surf","pier","jetty"],m:[1,1,2,3,3,3,3,3,2,2,1,1],
-  baits:["Live smelt or anchovy","Live sardine","Squid strips"],lures:["3–5\" paddle-tail swimbait on 1/2 oz jighead","Krocodile / Kastmaster spoon","Lucky Craft Flash Minnow"],
+  baits:["Live smelt or anchovy","Live sardine","Fresh-cut anchovy","Squid strips"],lures:["3–5\" paddle-tail swimbait on 1/2 oz jighead","Lucky Craft Flash Minnow 65/110","Krocodile / Kastmaster spoon","Hopkins / Sea Striker spoon"],
   rig:"Live bait: fish-finder rig, 1 oz sinker, 3 ft 15 lb leader, #2–1/0 hook\nLures: cast, let hit bottom, slow-roll back",
   where:"Sandy bottom near structure — pier ends, harbor mouths, rip channels. Smelt schools bring them in.",limit:"22\" minimum, 5 per day south of Pt. Sur."},
  {id:"bass",name:"Calico & Sand Bass",types:["jetty","pier"],m:[0,0,1,2,3,3,3,3,3,2,1,0],warm:true,
-  baits:["Live smelt or anchovy","Squid strips","Ghost shrimp"],lures:["3–4\" plastic swimbait","Curly-tail grub","Krocodile / Kastmaster spoon"],
+  baits:["Live smelt or anchovy","Fresh-cut anchovy","Squid strips","Ghost shrimp"],lures:["3–4\" plastic swimbait","Curly-tail grub","Lucky Craft Flash Minnow 65/110","Krocodile / Kastmaster spoon"],
   rig:"1/4–1/2 oz leadhead + 4\" swimbait on 12–15 lb\nWork it along the rocks, keep it moving",
   where:"Rock rubble, kelp and pilings. Cast along the jetty face, not straight out.",limit:"14\" minimum, 5 combined bass."},
  {id:"mack",name:"Pacific Mackerel",types:["pier","jetty"],m:[1,1,1,2,2,3,3,3,3,3,2,1],warm:true,
-  baits:["Squid strips","Mackerel strips","Live smelt or anchovy"],lures:["Sabiki rig","Krocodile / Kastmaster spoon"],
+  baits:["Squid strips","Mackerel strips","Fresh-cut anchovy","Live smelt or anchovy"],lures:["Sabiki rig","Krocodile / Kastmaster spoon","Hopkins / Sea Striker spoon"],
   rig:"Sabiki with 1–2 oz sinker on bottom\nJig up and down mid-water",where:"Deeper water off pier ends. Schools move fast — when one bites, hurry.",limit:"No bag limit. Great live bait for halibut."},
  {id:"bonito",name:"Pacific Bonito",types:["pier","jetty"],m:[0,0,0,0,1,2,3,3,3,2,1,0],warm:true,
-  baits:["Live smelt or anchovy"],lures:["Krocodile / Kastmaster spoon","Bonito feather behind a bubble"],
+  baits:["Live smelt or anchovy"],lures:["Krocodile / Kastmaster spoon","Bonito feather behind a bubble","Hopkins / Sea Striker spoon"],
   rig:"Clear casting bubble, half-filled\n6 ft leader → white feather or small spoon, fast retrieve",
   where:"Pier ends near deep water (Redondo, Newport, Oceanside). Watch for boils at first light.",limit:"10 per day, no more than 5 under 24\"."},
  {id:"jacksmelt",name:"Jacksmelt & Topsmelt",types:["pier","jetty"],m:[3,3,3,2,2,1,1,1,1,2,2,3],cold:true,
-  baits:["Squid strips","Mussel"],lures:["Sabiki rig"],rig:"Bobber rig: small float, 3 ft leader, two #8 hooks\nor a sabiki just below the surface",
+  baits:["Squid strips","Market shrimp","Mussel"],lures:["Sabiki rig"],rig:"Bobber rig: small float, 3 ft leader, two #8 hooks\nor a sabiki just below the surface",
   where:"Top of the water column around pilings. Easy action for kids.",limit:"No bag limit."},
  {id:"shark",name:"Leopard Shark & Rays",types:["surf","pier"],m:[0,0,1,2,3,3,3,3,2,1,0,0],warm:true,night:true,
-  baits:["Squid strips","Mackerel chunks","Ghost shrimp","Clam"],lures:[],
+  baits:["Squid strips","Mackerel chunks","Fresh-cut anchovy","Ghost shrimp","Clam"],lures:[],
   rig:"Fish-finder rig, 3–4 oz pyramid sinker\n30–40 lb leader → 2/0–4/0 circle hook",where:"Surf and bay flats after dark, best in summer on a rising tide.",limit:"Leopard shark 36\" minimum, 3 per day."},
  {id:"opaleye",name:"Opaleye",types:["jetty"],m:[2,2,2,2,2,2,2,2,2,2,2,2],
   baits:["Frozen peas","Mussel","Bread balls"],lures:[],rig:"Small slip bobber, 3 ft leader\nsplit-shot → #8 hook, 2–3 peas",
@@ -372,7 +372,7 @@ const SPECIES=[
   baits:["Live squid","Live sardine"],lures:["5–7\" swimbait at night"],rig:"Fly-line or light sliding sinker\n25–30 lb leader → 2/0–4/0 hook",
   where:"Pier ends during spring squid runs, especially at night under lights.",limit:"28\" minimum, 3 per day (1 Mar 15–Jun 15 south of Pt. Conception)."},
  {id:"pierperch",name:"Walleye & Pile Perch",types:["pier","jetty"],m:[3,3,3,2,2,1,1,1,1,2,3,3],cold:true,
-  baits:["Mussel","Gulp! Camo Sandworm","Ghost shrimp"],lures:["Sabiki rig"],rig:"Dropper loop, 1 oz sinker\n#6–#8 hooks, fish tight to the pilings",
+  baits:["Mussel","Gulp! Camo Sandworm","Market shrimp","Ghost shrimp"],lures:["Sabiki rig","1–2\" grub on a drop-shot rig"],rig:"Dropper loop, 1 oz sinker\n#6–#8 hooks, fish tight to the pilings",
   where:"Under and around pier pilings, mid-depth to bottom.",limit:"Counts toward 20 surfperch combined."}
 ];
 
@@ -406,16 +406,21 @@ const BAIT_INFO={
  "Mackerel chunks":"Thumb-sized fresh chunks for sharks and rays at night.",
  "Clam":"Frozen razor or market clams. Tie on with thread; spotfin and rays love it.",
  "Frozen peas":"Thaw, thread 2–3 on a #8 hook. Chum a few for opaleye.",
- "Bread balls":"Pinch moist bread around the hook. Works on opaleye in white water."
+ "Bread balls":"Pinch moist bread around the hook. Works on opaleye in white water.",
+ "Lugworms":"Sold live at many SoCal bait shops. Thread a 1–2\" piece on the hook. Perch and croaker love the scent.",
+ "Market shrimp":"Raw grocery-store shrimp, peeled and cut into thumbnail-size pieces. Cheap backup bait for perch, croaker and pier fish.",
+ "Fresh-cut anchovy":"Frozen anchovies from the bait shop. Hook one whole through the eyes for halibut, or cut chunks for bass and sharks. Use it when there's no live bait."
 };
 const LURE_INFO={
  "Gulp! sandworm on a Carolina rig":"Slow drag across the sand with pauses. Best artificial for surf perch.",
  "Gulp! sandworm drifted in the wash":"Light weight, let the backwash roll it. Corbina sight-fishing.",
  "Gulp! Camo Sandworm":"Same as the bait: slow drag on a Carolina rig.",
- "1–2\" curly-tail grub (motor oil)":"Small jighead or Carolina rig, slow retrieve along the bottom.",
+ "1–2\" grub on a drop-shot rig":"Hook 12–18\" above the sinker. Lift and drop slowly through the trough. Best colors: camo, motor oil, new penny, pumpkinseed.",
+ "2–3\" soft swimbait (surf)":"Gulp! Swimming Mullet or a 3\" Big Hammer on a 1/8–1/4 oz head. Swim it slowly just off the sand for perch, corbina and short halibut.",
+ "Hopkins / Sea Striker spoon":"Heavy (3/4–1 1/2 oz) for long surf casts. Let it sink, then reel fast with sharp lifts. Halibut, mackerel, bonito.",
  "3–5\" paddle-tail swimbait on 1/2 oz jighead":"Cast, let it hit bottom, slow-roll back with an occasional hop. Halibut king.",
  "Krocodile / Kastmaster spoon":"Long casts, vary speed. Covers water fast for halibut, bass, mackerel, bonito.",
- "Lucky Craft Flash Minnow":"Twitch-and-pause jerkbait over sand. Halibut and bass.",
+ "Lucky Craft Flash Minnow 65/110":"Use the 65 for surf perch and bass, the 110 for halibut. Twitch, twitch, pause over sand. Ghost minnow or sardine color.",
  "3–4\" plastic swimbait":"Work it along the rocks. Keep it moving or you'll snag.",
  "Curly-tail grub":"Steady swim along the jetty face.",
  "Sabiki rig":"Jig it slowly up and down. Catches mackerel, smelt and perch for bait.",
@@ -450,12 +455,35 @@ const SPOTS=[
  {n:"Torrey Pines State Beach",r:"sd",t:"surf",lat:32.9200,lng:-117.2590,sp:["perch","corbina","shark","yfc"],tip:"Long, quiet surf beach. Leopard sharks gather near La Jolla Shores in summer.",info:"Paid lot at the south end."},
  {n:"Mission Bay Jetties",r:"sd",t:"jetty",lat:32.7560,lng:-117.2520,sp:["bass","halibut","spotfin","perch","opaleye"],tip:"Channel side gets moving-tide halibut; bay side holds spotfin.",info:"Free lots at Mission Beach and Quivira."},
  {n:"Ocean Beach Pier",r:"sd",t:"pier",lat:32.7490,lng:-117.2560,sp:["mack","bonito","halibut","perch","bass"],tip:"Reaches kelp and deep water. Bonito and the odd yellowtail in warm years.",info:"Check status first — the pier has had long closures for repairs."},
- {n:"Imperial Beach Pier",r:"sd",t:"pier",lat:32.5797,lng:-117.1336,sp:["perch","yfc","halibut","shark"],tip:"Good perch and croaker. Water quality closures are common here.",info:"Check San Diego County beach water quality before you go."}
+ {n:"Imperial Beach Pier",r:"sd",t:"pier",lat:32.5797,lng:-117.1336,sp:["perch","yfc","halibut","shark"],tip:"Good perch and croaker. Water quality closures are common here.",info:"Check San Diego County beach water quality before you go."},
+ /* ---- surf beaches (tid = NOAA tide station, g = NOAA water thermometer, face = bearing the beach faces) ---- */
+ {n:"Carpinteria State Beach",r:"sb",t:"surf",lat:34.3920,lng:-119.5220,tid:"9411270",face:195,sp:["perch","corbina","halibut","yfc"],tip:"Gentle, protected beach. Fish the troughs near the creek mouth for perch.",info:"State park day-use lot (fee) or street parking downtown."},
+ {n:"Emma Wood State Beach",r:"sb",t:"surf",lat:34.2900,lng:-119.3330,tid:"9411189",face:210,sp:["perch","halibut","shark"],tip:"Cobble-and-sand beach that holds big winter barred perch.",info:"Small lot off Hwy 101 at the Ventura River."},
+ {n:"Hollywood Beach (Oxnard)",r:"sb",t:"surf",lat:34.1650,lng:-119.2330,tid:"9411065",face:230,sp:["perch","corbina","yfc","halibut","shark"],tip:"Long sandy stretch next to Channel Islands Harbor. Halibut near the jetty end.",info:"Street parking along Ocean Dr and Harbor Blvd."},
+ {n:"Zuma Beach",r:"la",t:"surf",lat:34.0150,lng:-118.8220,tid:"9410840",face:190,sp:["perch","corbina","halibut","shark"],tip:"Steep beach with deep water close in. Short casts into the shore break. Stay west of Point Dume's protected area.",info:"Huge paid lot along PCH; free PCH shoulder parking."},
+ {n:"Will Rogers State Beach",r:"la",t:"surf",lat:34.0350,lng:-118.5350,tid:"9410840",g:"9410840",face:195,sp:["perch","corbina","yfc","halibut"],tip:"Quiet mornings, steady perch. Fish around the storm drains after summer swells shape troughs.",info:"Paid lots along PCH."},
+ {n:"Manhattan Beach (El Porto)",r:"la",t:"surf",lat:33.8990,lng:-118.4190,tid:"9410738",g:"9410840",face:260,sp:["perch","corbina","halibut","yfc"],tip:"El Porto's sandbars form good troughs. Go early before surfers fill the lineup.",info:"Paid lot at 45th St (El Porto)."},
+ {n:"Hermosa Beach",r:"la",t:"surf",lat:33.8620,lng:-118.4020,tid:"9410738",g:"9410840",face:260,sp:["perch","corbina","yfc","halibut"],tip:"Wide sandy beach. Fish either side of the pier for perch and corbina in the wash.",info:"Metered street parking and city lots; tight on weekends."},
+ {n:"Torrance Beach",r:"la",t:"surf",lat:33.8200,lng:-118.3920,tid:"9410738",face:255,sp:["perch","corbina","halibut","shark"],tip:"Less crowded. Where the sand meets Palos Verdes rocks, perch stack up.",info:"Paid lot at the south end below Paseo de la Playa."},
+ {n:"Sunset Beach / Surfside",r:"oc",t:"surf",lat:33.7200,lng:-118.0750,tid:"9410680",face:215,sp:["perch","corbina","yfc","halibut"],tip:"Soft sand, gentle slope. Great corbina beach in summer. Dig sand crabs right there.",info:"Street parking on PCH and Pacific Ave."},
+ {n:"Huntington State Beach",r:"oc",t:"surf",lat:33.6380,lng:-117.9750,tid:"9410583",face:210,sp:["perch","corbina","yfc","halibut","shark","spotfin"],tip:"Miles of sand. The Santa Ana River mouth end holds croaker and halibut.",info:"State lot (fee) off PCH at Magnolia or Brookhurst."},
+ {n:"West Newport (Groins)",r:"oc",t:"surf",lat:33.6200,lng:-117.9480,tid:"9410583",face:205,sp:["perch","corbina","halibut","yfc"],tip:"The rock groins every few blocks create holes. Fish beside them, not on them.",info:"Street parking on the side streets off Seashore Dr."},
+ {n:"Crystal Cove State Park",r:"oc",t:"surf",lat:33.5715,lng:-117.8395,tid:"9410580",face:220,sp:["perch","corbina","halibut","yfc","opaleye"],tip:"Sand coves between reef points. Fish the sandy pockets for perch and corbina. Protected area: hook-and-line finfish from shore only. No tidepool collecting, shellfish or lobster.",info:"State park lots (fee) at Pelican Point, Los Trancos and Reef Point."},
+ {n:"Doheny State Beach",r:"oc",t:"surf",lat:33.4610,lng:-117.6880,tid:"TWC0419",face:190,sp:["perch","corbina","halibut","yfc"],tip:"Protected by Dana Point, so it stays fishable in south swells.",info:"State park lot (fee)."},
+ {n:"Capistrano Beach",r:"oc",t:"surf",lat:33.4550,lng:-117.6650,tid:"TWC0419",face:200,sp:["perch","corbina","yfc","halibut"],tip:"Narrow beach with good troughs. Few anglers.",info:"County lot off PCH."},
+ {n:"San Clemente State Beach",r:"oc",t:"surf",lat:33.4085,lng:-117.6045,tid:"TWC0419",face:235,sp:["perch","corbina","yfc","halibut"],tip:"Cobble patches hold winter perch. Walk south from the trail for empty sand.",info:"State park lot (fee), trail down the bluff."},
+ {n:"San Onofre State Beach",r:"sd",t:"surf",lat:33.3740,lng:-117.5650,tid:"TWC0419",face:230,sp:["perch","corbina","halibut","shark"],tip:"Long beach south of the old power plant. Big perch, few people.",info:"State park fee lot; bluff trails to the sand."},
+ {n:"Cardiff State Beach",r:"sd",t:"surf",lat:33.0100,lng:-117.2800,tid:"9410230",g:"9410230",face:260,sp:["perch","corbina","yfc","halibut"],tip:"Reef and sand mix. Fish the sandy pockets between reefs.",info:"State lot (fee) on Hwy 101."},
+ {n:"Del Mar Beach",r:"sd",t:"surf",lat:32.9600,lng:-117.2700,tid:"9410230",g:"9410230",face:265,sp:["perch","corbina","halibut","shark"],tip:"Near the San Dieguito River mouth, halibut and croaker move in on the incoming tide.",info:"Metered lots by 17th St and Powerhouse Park."},
+ {n:"Mission Beach",r:"sd",t:"surf",lat:32.7750,lng:-117.2530,tid:"9410230",g:"9410230",face:265,sp:["perch","corbina","yfc","halibut"],tip:"Busy in summer, so fish early. Steady perch in winter.",info:"Lots at Belmont Park and the south end."},
+ {n:"Coronado Central Beach",r:"sd",t:"surf",lat:32.6830,lng:-117.1830,tid:"9410166",face:235,sp:["perch","corbina","yfc","halibut"],tip:"Wide, flat beach. Fish the troughs at dawn.",info:"Free street parking on Ocean Blvd."},
+ {n:"Silver Strand State Beach",r:"sd",t:"surf",lat:32.6350,lng:-117.1430,tid:"9410120",face:250,sp:["perch","corbina","yfc","halibut","shark"],tip:"Miles of open sand between Coronado and Imperial Beach. Classic barred perch beach.",info:"State lot (fee)."}
 ];
 /* Nearest NOAA tide prediction station and (where one is close) NOAA water thermometer, in SPOTS order */
 const STN={"9411340":"Santa Barbara","9411189":"Ventura","9411065":"Port Hueneme","9410840":"Santa Monica Pier","9410777":"El Segundo",
   "9410738":"King Harbor","9410650":"Cabrillo Beach","9410680":"Long Beach","9410599":"Santa Ana River Entrance","9410583":"Balboa Pier",
-  "9410580":"Newport Bay Entrance","TWC0419":"San Clemente","9410230":"La Jolla","9410120":"Imperial Beach"};
+  "9410580":"Newport Bay Entrance","TWC0419":"San Clemente","9410230":"La Jolla","9410120":"Imperial Beach",
+  "9411270":"Rincon Island","9410166":"San Diego Quarantine Station"};
 const GAUGE={"9410840":"Santa Monica","9410230":"La Jolla"};
 [["9411340"],["9411340"],["9411189"],["9411189"],["9411065"],["9410840","9410840"],["9410840","9410840"],["9410840","9410840"],
  ["9410777","9410840"],["9410738"],["9410650"],["9410680"],["9410680"],["9410583"],["9410583"],["9410583"],["9410580"],
@@ -464,12 +492,16 @@ const GAUGE={"9410840":"Santa Monica","9410230":"La Jolla"};
    s.tide={id:t,name:STN[t]};s.temp=g?{id:g,name:GAUGE[g]}:null});
 /* compass bearing each beach faces (out to sea) — wind from within 60° of this is onshore */
 [180,160,215,225,225,170,220,240,255,260,180,180,200,220,215,210,200,200,240,250,250,255,270,270,270,265].forEach((f,i)=>SPOTS[i].face=f);
+SPOTS.forEach((s,i)=>{if(!s.tid)return;s.i=i;s.id=s.n.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+  s.tide={id:s.tid,name:STN[s.tid]};s.temp=s.g?{id:s.g,name:GAUGE[s.g]}:null});
 /* known water-quality problems and fish-consumption advisories */
 const WQ={
   "imperial-beach-pier":{level:"bad",text:"Often closed by Tijuana River sewage flows, sometimes for months. Check the county site before you go."},
   "belmont-veterans-pier":{level:"warn",text:"LA River outflow nearby. Water quality is often poor, especially after rain."},
   "seal-beach-pier":{level:"warn",text:"San Gabriel River mouth nearby. Grades drop after rain."},
-  "cabrillo-beach-san-pedro-breakwater":{level:"warn",text:"Inner Cabrillo has a history of poor summer grades. The outer beach is usually better."}};
+  "cabrillo-beach-san-pedro-breakwater":{level:"warn",text:"Inner Cabrillo has a history of poor summer grades. The outer beach is usually better."},
+  "doheny-state-beach":{level:"warn",text:"San Juan Creek runoff. Grades often drop after rain, especially near the creek mouth."},
+  "silver-strand-state-beach":{level:"warn",text:"Tijuana River flows can reach this far north during south swells. Check the county site."}};
 const DDT=new Set(["king-harbor-breakwall-redondo","cabrillo-beach-san-pedro-breakwater","belmont-veterans-pier","seal-beach-pier"]);
 const WQ_LINK={sb:["Beach Report Card","https://beachreportcard.org"],la:["Beach Report Card","https://beachreportcard.org"],
   oc:["OC Beach Info","https://ocbeachinfo.com"],sd:["SD Beach Info","https://www.sdbeachinfo.com"]};
@@ -479,7 +511,7 @@ const TYPE_LABEL={surf:"Surf",pier:"Pier",jetty:"Jetty"};
 const store={get(k,d){try{const v=localStorage.getItem("scc:"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
   set(k,v){try{localStorage.setItem("scc:"+k,JSON.stringify(v))}catch(e){}}};
 const S={offset:0,beach:store.get("beach","huntington-beach-pier"),tab:"today",
-  ovr:store.get("ovr",{}),goRegion:store.get("goRegion",null),baitType:store.get("baitType","surf"),spotType:"all"};
+  ovr:store.get("ovr",{}),goRegion:store.get("goRegion",null),goType:store.get("goType","all"),baitType:store.get("baitType","surf"),spotType:"all"};
 const DEFAULT_COND={hs:3,per:12,temp:64,src:"example"};
 
 /* ================= LIVE DATA ================= */
@@ -659,8 +691,9 @@ function bestWindow(M){const now=Date.now();
 /* 3-day "Go now" plan: best beach and window for today, tomorrow and the day after */
 const GO_REGIONS=[["la","LA County"],["oc","Orange County"],["sd","San Diego"],["sb","SB / Ventura"],["all","All SoCal"]];
 const goRegion=()=>S.goRegion||beach().r;
+const goPool=(region=goRegion())=>SPOTS.filter(sp=>(region==="all"||sp.r===region)&&(S.goType==="all"||sp.t===S.goType));
 function goNow(region=goRegion()){
-  const pool=SPOTS.filter(sp=>region==="all"||sp.r===region);
+  const pool=goPool(region);
   return[0,1,2,3].map(off=>{
     const ranked=pool.map(sp=>{const M=dayModel(sp,off),w=bestWindow(M);
       const unsafe=waveInfo(M.c.hs,M.c.per)[sp.t][1]==="bad"||WQ[sp.id]?.level==="bad";
@@ -706,6 +739,7 @@ function goNowHTML(){
   return `<div class="panel go">
     <div class="panel-head"><h2>Go now · next 3 days</h2><button class="reset" id="sharePlan">Send to friends</button></div>
     <div class="regchips" role="group" aria-label="Region">${GO_REGIONS.map(([k,n])=>`<button class="chip" data-goreg="${k}" aria-pressed="${goRegion()===k}">${n}</button>`).join("")}</div>
+    <div class="regchips" role="group" aria-label="Spot type">${["all","surf","pier","jetty"].map(t=>`<button class="chip" data-gotype="${t}" aria-pressed="${S.goType===t}">${t==="all"?"Any spot":TYPE_LABEL[t]}</button>`).join("")}</div>
     ${days.map(d=>{const x=d.top;return `<div class="goday">
       <div class="goday-top"><div><span class="eyebrow">${dn(d.ds)}</span><h3>${esc(x.sp.n)}</h3>
         <div class="gowin num">${fmtT(x.w.a)} – ${fmtT(x.w.b)}${x.w.hot?' <span class="star">★</span>':""}</div></div>
@@ -714,11 +748,11 @@ function goNowHTML(){
       <div class="small muted">Also good: ${d.alt.map(a=>esc(a.sp.n)).join(", ")}${d.mine&&d.mine!==x?` · Your beach: ${fmtT(d.mine.w.a)} (${d.mine.M.score})`:""}</div>
       <button class="reset" data-plan="${x.sp.id}|${d.off}">Open this plan</button>
     </div>`}).join("")}
-    <p class="src">Ranks ${goRegion()==="all"?"all 26 beaches":`the ${SPOTS.filter(s=>s.r===goRegion()).length} beaches in ${GO_REGIONS.find(g=>g[0]===goRegion())[1]}`} by tide, light, moon, season, and each beach's own waves and wind.</p>
+    <p class="src">Ranks ${goPool().length} ${S.goType==="all"?"spots":TYPE_LABEL[S.goType].toLowerCase()+" spots"} in ${GO_REGIONS.find(g=>g[0]===goRegion())[1]} by tide, light, moon, season, and each beach's own waves and wind.</p>
   </div>`}
 function planText(){
   const days=goNow();
-  return `SoCal Shore Caster plan · ${GO_REGIONS.find(g=>g[0]===goRegion())[1]}\n`+days.map(d=>{const x=d.top;
+  return `SoCal Shore Caster plan · ${GO_REGIONS.find(g=>g[0]===goRegion())[1]}${S.goType==="all"?"":" · "+TYPE_LABEL[S.goType]}\n`+days.map(d=>{const x=d.top;
     return `${new Date(d.ds).toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}: ${x.sp.n}, ${fmtT(x.w.a)}–${fmtT(x.w.b)}. ${planReasons(x).join(", ")}.`}).join("\n")+
     (location.protocol.startsWith("http")?"\n"+location.origin+location.pathname:"")}
 async function sharePlan(){const text=planText(),btn=$("#sharePlan");
@@ -876,6 +910,17 @@ function bestBait(type,month,c){
       (m[b]=m[b]||{name:b,w:0,for:[]}).w+=w;m[b].for.push(sp.name)}));return Object.values(m).sort((x,y)=>y.w-x.w)};
   return{species:sc,baits:agg("baits"),lures:agg("lures")}}
 
+const RIGS=[
+ {n:"Carolina rig",types:["surf","pier"],for:"Perch, corbina, croaker",how:"Main line → 1/4–1 oz egg sinker → bead → swivel\n→ 18–36\" fluorocarbon leader → #4–#6 hook or grub"},
+ {n:"Drop-shot rig",types:["surf","pier","jetty"],for:"Perch and croaker on grubs",how:"Palomar knot to the hook, leave a 12–18\" tag end\n→ 1/2–1 oz sinker on the tag. The grub rides above the sand."},
+ {n:"High/low rig",types:["surf","pier"],for:"Croaker, perch, spotfin",how:"Two dropper loops 12\" apart, #2–#4 hook on each\n→ 1–3 oz pyramid sinker at the bottom"},
+ {n:"Fish-finder (sliding sinker)",types:["surf","pier","jetty"],for:"Halibut, sharks, spotfin",how:"Sinker slide on the main line → bead → swivel\n→ 2–3 ft leader → live bait or chunk on a #2–4/0 hook"},
+ {n:"Sabiki",types:["pier","jetty"],for:"Mackerel, smelt, live bait",how:"Pre-tied 6-hook rig, 1–2 oz sinker on the bottom\nJig slowly at mid-depth"},
+ {n:"Slip bobber",types:["pier","jetty"],for:"Opaleye, jacksmelt",how:"Bobber stop → bead → slip float → split-shot\n→ 2–3 ft leader → #8 hook"}];
+function colorTip(c,R){const rain=rainPast(wxFor(R),Date.now());
+  if(c.hs>4||(rain&&rain.inches>=0.1))return["Dirty water","warn","Murky from surf or rain. Use white, chartreuse, glow or orange-and-white, and add Gulp! scent or a bait strip."];
+  if(c.hs<1.5)return["Clear water","good","Calm and clear. Use natural colors: camo, motor oil, smoke, pumpkinseed. Drop to 4–6 lb fluorocarbon leader."];
+  return["Normal water","good","Camo, motor oil and new penny for grubs and sandworms. Switch to white or chartreuse at dawn and dusk."]}
 function renderBait(){
   const M=dayModel(),c=M.c,bt=bestBait(S.baitType,M.month,c),wi=waveInfo(c.hs,c.per);
   const typeTips={surf:["Fish the last 2 hours of the incoming tide through the first hour of the outgoing.","Look for troughs, rip currents and \"cuts\" — darker water with fewer breaking waves.","Walk and cast. If no bites in 15 minutes, move 50 yards."],
@@ -890,8 +935,13 @@ function renderBait(){
   </div>
   ${bt.lures.length?`<div class="panel"><h2>Top lures</h2>
     <div class="rank">${bt.lures.slice(0,3).map((b,i)=>`<div class="row"><span class="n">${i+1}</span><div><b>${esc(b.name)}</b><span class="small muted">${esc(LURE_INFO[b.name]||"")}</span><div class="small" style="margin-top:3px">For: ${b.for.join(", ")}</div></div></div>`).join("")}</div></div>`:""}
+  <div class="panel"><div class="panel-head"><h2>Lure colors today</h2><span class="chip ${colorTip(c,beach())[1]}">${colorTip(c,beach())[0]}</span></div>
+    <p class="small">${colorTip(c,beach())[2]}</p></div>
   <div class="panel"><h2>Rigs for today's targets</h2>
     ${bt.species.slice(0,3).map(({sp})=>`<div><h3>${sp.name}</h3><div class="rig">${esc(sp.rig)}</div><p class="small muted" style="margin-top:6px">${esc(sp.where)}</p></div>`).join("")}
+  </div>
+  <div class="panel"><h2>${TYPE_LABEL[S.baitType]} rig library</h2>
+    ${RIGS.filter(r=>r.types.includes(S.baitType)).map(r=>`<div><h3>${r.n}</h3><p class="small muted">For: ${r.for}</p><div class="rig">${esc(r.how)}</div></div>`).join("")}
   </div>
   <div class="panel"><h2>${TYPE_LABEL[S.baitType]} tips</h2>
     ${sinker?`<p class="note">${sinker}</p>`:""}
@@ -914,7 +964,7 @@ function renderSpots(){
     .sort((a,b)=>b.score-a.score);
   $("#v-spots").innerHTML=`
   <div class="seg" role="group" aria-label="Spot type">${["all","surf","pier","jetty"].map(t=>`<button data-st="${t}" aria-pressed="${S.spotType===t}">${t==="all"?"All":TYPE_LABEL[t]}</button>`).join("")}</div>
-  <p class="small muted">${list.length} beaches ranked for ${new Date(M.ds).toLocaleDateString([], {weekday:"long"})} by season, moon, tide and each beach's own wave forecast.</p>
+  <p class="small muted">${list.length} spots ranked for ${new Date(M.ds).toLocaleDateString([], {weekday:"long"})} by season, moon, tide and each beach's own wave forecast.</p>
   ${list.map((x,i)=>{const mine=x.s.id===beach().id;return `<article class="spot"${mine?' style="border-color:var(--accent)"':""}>
     <div class="spot-top"><div><span class="rankno">#${i+1}</span><h3>${esc(x.s.n)}</h3>
       <div class="factors"><span class="chip type">${TYPE_LABEL[x.s.t]}</span>${x.c.src!=="example"?`<span class="chip">${x.c.hs} ft @ ${x.c.per}s</span><span class="chip">${x.c.temp}°F</span>`:""}</div></div>
@@ -1078,11 +1128,12 @@ function go(tab){S.tab=tab;document.querySelectorAll(".view").forEach(v=>v.hidde
 document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.tab)));
 $("#prev").addEventListener("click",()=>{S.offset--;render()});
 $("#next").addEventListener("click",()=>{S.offset++;render()});
-$("#beach").innerHTML=["sb","la","oc","sd"].map(r=>`<optgroup label="${REGIONS[r].name}">${SPOTS.filter(s=>s.r===r).map(s=>`<option value="${s.id}">${esc(s.n)}</option>`).join("")}</optgroup>`).join("");
+$("#beach").innerHTML=["sb","la","oc","sd"].map(r=>`<optgroup label="${REGIONS[r].name}">${SPOTS.filter(s=>s.r===r).sort((a,b)=>b.lat-a.lat).map(s=>`<option value="${s.id}">${esc(s.n)} · ${TYPE_LABEL[s.t]}</option>`).join("")}</optgroup>`).join("");
 function setBeach(id){S.beach=id;store.set("beach",id);S.baitType=beach().t;store.set("baitType",S.baitType);render()}
 $("#beach").addEventListener("change",e=>setBeach(e.target.value));
 document.addEventListener("click",e=>{
   const bb=e.target.closest("[data-beach]");if(bb){setBeach(bb.dataset.beach);go("today");return}
+  const gt=e.target.closest("[data-gotype]");if(gt){S.goType=gt.dataset.gotype;store.set("goType",S.goType);renderToday();return}
   const gr=e.target.closest("[data-goreg]");if(gr){S.goRegion=gr.dataset.goreg;store.set("goRegion",S.goRegion);renderToday();return}
   const pl=e.target.closest("[data-plan]");if(pl){const [id,off]=pl.dataset.plan.split("|");S.offset=+off;setBeach(id);window.scrollTo(0,0);return}
   const bt=e.target.closest("[data-bt]");if(bt){S.baitType=bt.dataset.bt;store.set("baitType",S.baitType);render();return}
