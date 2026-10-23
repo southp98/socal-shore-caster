@@ -193,6 +193,10 @@ footer{font-size:.75rem;color:var(--muted);text-align:center;padding-block:4px 1
 nav.tabs .in{grid-template-columns:repeat(5,1fr)!important}
 nav.tabs button{font-size:.74rem!important;letter-spacing:.05em!important}
 .go{border:2px solid var(--accent)}
+.regchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.regchips::-webkit-scrollbar{display:none}
+.regchips .chip{cursor:pointer;font-size:.82rem;padding:6px 12px;color:var(--ink)}
+.regchips .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .goday{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
 .goday:first-of-type{border-top:0;padding-top:0}
 .goday-top{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
@@ -475,7 +479,7 @@ const TYPE_LABEL={surf:"Surf",pier:"Pier",jetty:"Jetty"};
 const store={get(k,d){try{const v=localStorage.getItem("scc:"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
   set(k,v){try{localStorage.setItem("scc:"+k,JSON.stringify(v))}catch(e){}}};
 const S={offset:0,beach:store.get("beach","huntington-beach-pier"),tab:"today",
-  ovr:store.get("ovr",{}),baitType:store.get("baitType","surf"),spotType:"all"};
+  ovr:store.get("ovr",{}),goRegion:store.get("goRegion",null),baitType:store.get("baitType","surf"),spotType:"all"};
 const DEFAULT_COND={hs:3,per:12,temp:64,src:"example"};
 
 /* ================= LIVE DATA ================= */
@@ -653,9 +657,12 @@ function bestWindow(M){const now=Date.now();
   return best}
 
 /* 3-day "Go now" plan: best beach and window for today, tomorrow and the day after */
-function goNow(){
+const GO_REGIONS=[["la","LA County"],["oc","Orange County"],["sd","San Diego"],["sb","SB / Ventura"],["all","All SoCal"]];
+const goRegion=()=>S.goRegion||beach().r;
+function goNow(region=goRegion()){
+  const pool=SPOTS.filter(sp=>region==="all"||sp.r===region);
   return[0,1,2,3].map(off=>{
-    const ranked=SPOTS.map(sp=>{const M=dayModel(sp,off),w=bestWindow(M);
+    const ranked=pool.map(sp=>{const M=dayModel(sp,off),w=bestWindow(M);
       const unsafe=waveInfo(M.c.hs,M.c.per)[sp.t][1]==="bad"||WQ[sp.id]?.level==="bad";
       return{sp,M,w,s:M.score+(w?.hot?4:0)-(unsafe?40:0)}}).filter(x=>x.w).sort((a,b)=>b.s-a.s);
     return{off,ds:dayStart(off),top:ranked[0],alt:ranked.slice(1,3),mine:ranked.find(x=>x.sp.id===beach().id)}}).filter(d=>d.top).slice(0,3)}
@@ -698,6 +705,7 @@ function goNowHTML(){
   const dn=ds=>{const o=Math.round((ds-dayStart(0))/dayMs);return o===0?"Today":o===1?"Tomorrow":new Date(ds).toLocaleDateString([], {weekday:"long"})};
   return `<div class="panel go">
     <div class="panel-head"><h2>Go now · next 3 days</h2><button class="reset" id="sharePlan">Send to friends</button></div>
+    <div class="regchips" role="group" aria-label="Region">${GO_REGIONS.map(([k,n])=>`<button class="chip" data-goreg="${k}" aria-pressed="${goRegion()===k}">${n}</button>`).join("")}</div>
     ${days.map(d=>{const x=d.top;return `<div class="goday">
       <div class="goday-top"><div><span class="eyebrow">${dn(d.ds)}</span><h3>${esc(x.sp.n)}</h3>
         <div class="gowin num">${fmtT(x.w.a)} – ${fmtT(x.w.b)}${x.w.hot?' <span class="star">★</span>':""}</div></div>
@@ -706,11 +714,11 @@ function goNowHTML(){
       <div class="small muted">Also good: ${d.alt.map(a=>esc(a.sp.n)).join(", ")}${d.mine&&d.mine!==x?` · Your beach: ${fmtT(d.mine.w.a)} (${d.mine.M.score})`:""}</div>
       <button class="reset" data-plan="${x.sp.id}|${d.off}">Open this plan</button>
     </div>`}).join("")}
-    <p class="src">Ranks all 26 beaches by tide, light, moon, season, and each beach's own waves and wind.</p>
+    <p class="src">Ranks ${goRegion()==="all"?"all 26 beaches":`the ${SPOTS.filter(s=>s.r===goRegion()).length} beaches in ${GO_REGIONS.find(g=>g[0]===goRegion())[1]}`} by tide, light, moon, season, and each beach's own waves and wind.</p>
   </div>`}
 function planText(){
   const days=goNow();
-  return "SoCal Shore Caster plan\n"+days.map(d=>{const x=d.top;
+  return `SoCal Shore Caster plan · ${GO_REGIONS.find(g=>g[0]===goRegion())[1]}\n`+days.map(d=>{const x=d.top;
     return `${new Date(d.ds).toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"})}: ${x.sp.n}, ${fmtT(x.w.a)}–${fmtT(x.w.b)}. ${planReasons(x).join(", ")}.`}).join("\n")+
     (location.protocol.startsWith("http")?"\n"+location.origin+location.pathname:"")}
 async function sharePlan(){const text=planText(),btn=$("#sharePlan");
@@ -1075,6 +1083,7 @@ function setBeach(id){S.beach=id;store.set("beach",id);S.baitType=beach().t;stor
 $("#beach").addEventListener("change",e=>setBeach(e.target.value));
 document.addEventListener("click",e=>{
   const bb=e.target.closest("[data-beach]");if(bb){setBeach(bb.dataset.beach);go("today");return}
+  const gr=e.target.closest("[data-goreg]");if(gr){S.goRegion=gr.dataset.goreg;store.set("goRegion",S.goRegion);renderToday();return}
   const pl=e.target.closest("[data-plan]");if(pl){const [id,off]=pl.dataset.plan.split("|");S.offset=+off;setBeach(id);window.scrollTo(0,0);return}
   const bt=e.target.closest("[data-bt]");if(bt){S.baitType=bt.dataset.bt;store.set("baitType",S.baitType);render();return}
   const st=e.target.closest("[data-st]");if(st){S.spotType=st.dataset.st;render();return}
